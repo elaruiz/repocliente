@@ -1,0 +1,29 @@
+{
+  "name": "udadatapresentation",
+  "version": "1.0.0",
+  "description": "\"UDA Data Presentation API\"",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "apok",
+  "license": "MIT",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "boom": "^5.2.0",
+    "glob": "^7.1.2",
+    "hapi": "^16.5.2",
+    "hapi-auth-jwt": "^4.0.0",
+    "joi": "^10.6.0",
+    "joi-objectid": "^2.0.0",
+    "jsonwebtoken": "^7.4.3",
+    "moment": "^2.18.1",
+    "pg": "^7.2.0",
+    "pg-hstore": "^2.3.2",
+    "sequelize": "^4.8.0"
+  },
+  "devDependencies": {
+    "gulp": "^3.9.1",
+    "gulp-nodemon": "^2.2.1"
+  }
+}

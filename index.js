@@ -4,7 +4,7 @@ const Hapi = require('hapi');
 const Boom = require('boom');
 const glob = require('glob');
 const path = require('path');
-const secret = require('./app/constants');
+const secret = require('./app/constants').TOKEN_SECRET;
 const models = require('./app/models');
 
 const server = new Hapi.Server();
@@ -24,7 +24,7 @@ server.register(require('hapi-auth-jwt'), err => {
   // all the subdirectories of API
   // and create a new route for each
   glob
-    .sync('app/**/routes/*.js', {
+    .sync('app/**/routes/*/*.js', {
       root: __dirname
     })
     .forEach(file => {

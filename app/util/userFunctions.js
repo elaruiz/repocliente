@@ -1,10 +1,6 @@
 'use strict';
 
 const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const secret = require('../constants');
-const moment = require('moment');
-const Boom = require('boom');
 
 function hashPassword(password, cb) {
     // Generate a salt at level 10 strength
@@ -20,24 +16,8 @@ function comparePasswords(password, userPassword, cb) {
         return cb(err, isValid);
     });
 }
-function ensureAuthenticated(req, res, next) {
-    let token = req.headers.authorization.split(' ')[1];
-    let payload = null;
-    try {
-        payload = jwt.decode(token, secret);
-    }
-    catch (err) {
-        return res(Boom.unauthorized('Unauthorized'));
-    }
-    if (payload.exp <= moment().unix()) {
-        return res(Boom.badRequest('Token expired'));
-    }
-    console.log(payload)
-    req.payload.id = payload.sub;
-    next();
-}
+
 module.exports = {
     hashPassword: hashPassword,
-    comparePasswords: comparePasswords,
-    ensureAuthenticated: ensureAuthenticated
+    comparePasswords: comparePasswords
 };

@@ -1,7 +1,7 @@
 'use strict';
 
-const createUserSchema = require('../schemas/createUser');
-const usersController = require('../controllers').users;
+const createUserSchema = require('../../schemas/user').createUserSchema;
+const usersController = require('../../controllers/index').users;
 
 module.exports = {
   method: 'POST',
@@ -9,7 +9,7 @@ module.exports = {
   config: {
     auth: false,
     // Before the route handler runs, verify that the user is unique
-    pre: [{ method: usersController.verifyUniqueUser }],
+    pre: [{ method: usersController.verifyUniqueUser}],
     handler: usersController.createUser,
     // Validate the payload against the Joi schema
     validate: {

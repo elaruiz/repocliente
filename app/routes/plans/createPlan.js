@@ -1,7 +1,9 @@
 'use strict';
 
-const createPlanSchema = require('../../schemas/plan').createPlanSchema;
+const createPlanSchema = require('../../schemas/PlanSchema').createPlanSchema;
 const plansController = require('../../controllers/index').plans;
+
+//import { createPlan } from '../../controllers/PlansController'
 
 module.exports = {
     method: 'POST',

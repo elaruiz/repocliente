@@ -1,6 +1,6 @@
 'use strict';
 
-const authenticateUserSchema = require('../../schemas/user').authenticateUserSchema;
+const authenticateUserSchema = require('../../schemas/UserSchema').authenticateUserSchema;
 const usersController = require('../../controllers/index').users;
 const createToken = require('../../util/token');
 
@@ -14,7 +14,7 @@ module.exports = {
         handler: (req, res) => {
             // If the user's password is correct, we can issue a token.
             // If it was incorrect, the error will bubble up from the pre method
-            res({ token: createToken(req.pre.user), data: req.pre.user }).code(201);
+            res({ token: createToken(req.pre.user), data: req.pre.user }).code(200);
         },
         validate: {
             payload: authenticateUserSchema

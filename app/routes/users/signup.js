@@ -1,6 +1,6 @@
 'use strict';
 
-const createUserSchema = require('../../schemas/user').createUserSchema;
+const createUserSchema = require('../../schemas/UserSchema').createUserSchema;
 const usersController = require('../../controllers/index').users;
 
 module.exports = {

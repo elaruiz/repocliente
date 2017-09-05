@@ -1,5 +1,5 @@
 'use strict';
-const paramsUserSchema = require('../../schemas/user').paramsSchema;
+const paramsUserSchema = require('../../schemas/UserSchema').paramsSchema;
 const usersController = require('../../controllers/index').users;
 
 module.exports = {

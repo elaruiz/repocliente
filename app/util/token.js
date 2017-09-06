@@ -3,7 +3,7 @@
 const jwt = require('jsonwebtoken');
 const secret = require('../constants').TOKEN_SECRET;
 
-function createToken(user) {
+const createToken = (user) => {
   let scopes;
   // Check if the user object passed in
   // has admin set to true, and if so, set
@@ -19,4 +19,6 @@ function createToken(user) {
   );
 }
 
-module.exports = createToken;
+export default createToken;
+
+// module.exports = createToken;

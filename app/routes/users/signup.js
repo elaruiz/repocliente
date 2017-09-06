@@ -1,19 +1,22 @@
 'use strict';
 
-const createUserSchema = require('../../schemas/UserSchema').createUserSchema;
-const usersController = require('../../controllers/index').users;
+import { createUser, verifyUniqueUser } from "../../controllers/UserController";
+import { createUserSchema } from "../../schemas/UserSchema";
 
-module.exports = {
-  method: 'POST',
-  path: '/api/users',
-  config: {
-    auth: false,
-    // Before the route handler runs, verify that the user is unique
-    pre: [{ method: usersController.verifyUniqueUser}],
-    handler: usersController.createUser,
-    // Validate the payload against the Joi schema
-    validate: {
-      payload: createUserSchema
+// const createUserSchema = require('../../schemas/UserSchema').createUserSchema;
+// const usersController = require('../../controllers/index').users;
+
+export default {
+    method: 'POST',
+    path: '/api/users',
+    config: {
+        auth: false,
+        // Before the route handler runs, verify that the user is unique
+        pre: [{ method: verifyUniqueUser }],
+        handler: createUser,
+        // Validate the payload against the Joi schema
+        validate: {
+            payload: createUserSchema
+        }
     }
-  }
 };

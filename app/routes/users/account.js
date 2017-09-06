@@ -1,12 +1,13 @@
 'use strict';
+import { findUser } from "../../controllers/UserController";
 
-const usersController = require('../../controllers/index').users;
+// const usersController = require('../../controllers/index').users;
 
-module.exports = {
+export default {
     method: 'GET',
     path: '/api/users/me',
     config: {
         auth: 'jwt',
-        handler: usersController.findUser
+        handler: findUser
     }
 };

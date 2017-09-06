@@ -1,15 +1,17 @@
 'use strict';
-const paramsUserSchema = require('../../schemas/UserSchema').paramsSchema;
-const usersController = require('../../controllers/index').users;
+import { deleteUser, verifyUser } from "../../controllers/UserController";
+import { paramsSchema } from "../../schemas/UserSchema";
+// const paramsUserSchema = require('../../schemas/UserSchema').paramsSchema;
+// const usersController = require('../../controllers/index').users;
 
 module.exports = {
     method: 'DELETE',
     path: '/api/users/{id}',
     config: {
-        pre: [{ method: usersController.verifyUser, assign: 'user' }],
-        handler: usersController.deleteUser,
+        pre: [{ method: verifyUser, assign: 'user' }],
+        handler: deleteUser,
         validate: {
-            params: paramsUserSchema
+            params: paramsSchema
         },
         auth: {
             strategy: 'jwt'

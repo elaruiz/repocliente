@@ -1,6 +1,6 @@
 'use strict';
 
-module.exports = (sequelize, DataTypes) =>{
+const PlanModel = (sequelize, DataTypes) => {
     const Plan = sequelize.define('plan', {
         name: {type: DataTypes.STRING, allowNull: false},
         description: { type: DataTypes.STRING},
@@ -24,3 +24,5 @@ module.exports = (sequelize, DataTypes) =>{
 
     return Plan;
 };
+
+export default PlanModel;

@@ -1,6 +1,6 @@
 'use strict';
 
-module.exports = (sequelize, DataTypes) =>{
+const userModel = (sequelize, DataTypes) =>{
     const User = sequelize.define('user',
         {
             name: {type: DataTypes.STRING, allowNull: false},
@@ -13,10 +13,11 @@ module.exports = (sequelize, DataTypes) =>{
             paranoid: true,
             underscored: true,
         });
-    User.beforeCreate(user => {
-        user.admin = true })
+    User.beforeCreate(user => { user.admin = true });
     User.associate = (models) => {
         User.belongsToMany(models.plan, {through: { model: models.membership, unique: false }});
     };
     return User;
 };
+
+export default userModel;

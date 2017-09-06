@@ -1,11 +1,10 @@
 'use strict';
 
-const Hapi = require('hapi');
-const Boom = require('boom');
-const glob = require('glob');
-const path = require('path');
-const secret = require('./app/constants').TOKEN_SECRET;
-const models = require('./app/models');
+import Hapi from 'hapi';
+import glob from 'glob';
+import path from 'path';
+import { TOKEN_SECRET } from "./constants/index";
+import models from './models/index';
 
 const server = new Hapi.Server();
 
@@ -16,7 +15,7 @@ server.connection({ port: 3000, routes: { cors: true } });
 server.register(require('hapi-auth-jwt'), err => {
   // We are giving the strategy a name of 'jwt'
   server.auth.strategy('jwt', 'jwt', 'required', {
-    key: secret,
+    key: TOKEN_SECRET,
     verifyOptions: { algorithms: ['HS256'] }
   });
 
@@ -24,7 +23,7 @@ server.register(require('hapi-auth-jwt'), err => {
   // all the subdirectories of API
   // and create a new route for each
   glob
-    .sync('app/**/routes/*/*.js', {
+    .sync('routes/*/*.js', {
       root: __dirname
     })
     .forEach(file => {

@@ -1,14 +1,15 @@
 'use strict';
+import { findPlan } from "../../controllers/PlanController";
 
-const plansController = require('../../controllers/index').plans;
+// const plansController = require('../../controllers/index').plans;
 
-module.exports = {
+export default {
     method: 'GET',
     path: '/api/plan/{id}',
     config: {
         auth: {
             strategy: 'jwt'
         },
-        handler: plansController.findPlan,
+        handler: findPlan,
     }
 };

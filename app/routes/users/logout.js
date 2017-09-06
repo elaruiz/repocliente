@@ -1,12 +1,13 @@
 'use strict';
+import { setLastLogin } from "../../controllers/UserController";
 
-const usersController = require('../../controllers/index').users;
+// const usersController = require('../../controllers/index').users;
 
-module.exports = {
+export default {
     method: 'GET',
     path: '/api/users/logout',
     config: {
         auth: 'jwt',
-        handler: usersController.setLastLogin
+        handler: setLastLogin
     }
 };

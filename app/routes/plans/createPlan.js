@@ -1,9 +1,11 @@
 'use strict';
 
-const createPlanSchema = require('../../schemas/PlanSchema').createPlanSchema;
-const plansController = require('../../controllers/index').plans;
+import { createPlanSchema } from "../../schemas/PlanSchema";
+import { createPlan } from "../../controllers/PlanController";
 
-//import { createPlan } from '../../controllers/PlansController'
+// const createPlanSchema = require('../../schemas/PlanSchema').createPlanSchema;
+// const plansController = require('../../controllers/index').plans;
+
 
 module.exports = {
     method: 'POST',
@@ -13,7 +15,7 @@ module.exports = {
             strategy: 'jwt',
             scope: ['admin']
         },
-        handler: plansController.createPlan,
+        handler: createPlan,
         // Validate the payload against the Joi schema
         validate: {
             payload: createPlanSchema

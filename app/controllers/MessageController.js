@@ -1,11 +1,13 @@
 'use strict'
 
-const Boom = require('boom');
-const Message = require('../models').message;
+import Boom from 'boom';
+// const Message = require('../models').message;
+import Models from '../models';
+const Message = Models.message;
 
-module.exports = {
+// module.exports = {
 
-    findAllMessages(req, res) {
+    export const findAllMessages = (req, res) => {
         return Message
             .findAll({ offset: req.query.page, limit: req.query.size || 20, order: [['created_at', 'DESC']] })
             .then(msgs => {
@@ -15,18 +17,18 @@ module.exports = {
                 return res({data: msgs}).code(200);
             })
             .catch((error) => res(Boom.badRequest(error)));
-    },
+    };
 
-    createMessage(req, res) {
+    export const createMessage = (req, res) => {
         req.payload.read = false;
         return  Message
                     .create(req.payload)
                     .then(msg => res({ data: msg }).code(201))
                     .catch(error => Boom.badRequest(error));
 
-    },
+    };
 
-    findMessage(req, res) {
+    export const findMessage = (req, res) => {
         return Message
             .findById(req.params.id)
             .then(msg => {
@@ -36,9 +38,9 @@ module.exports = {
                     .catch(error => res(Boom.notFound('Not Found')))
             })
             .catch(error => res(Boom.badRequest(error)));
-    },
+    };
 
-    deleteMessage(req, res) {
+    export const deleteMessage = (req, res) => {
         return Message
             .findById(req.params.id)
             .then(msg => {
@@ -48,6 +50,6 @@ module.exports = {
                         .catch(error => res(Boom.badRequest(error)))
             })
             .catch(error => res(Boom.notFound('Not Found')));
-    },
+    };
 
-};
+// };

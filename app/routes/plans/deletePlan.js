@@ -1,8 +1,9 @@
 'use strict';
+import { deletePlan } from "../../controllers/PlanController";
 
-const plansController = require('../../controllers/index').plans;
+// const plansController = require('../../controllers/index').plans;
 
-module.exports = {
+export default {
     method: 'DELETE',
     path: '/api/plans/{id}',
     config: {
@@ -10,6 +11,6 @@ module.exports = {
             strategy: 'jwt',
             scope: ['admin']
         },
-        handler: plansController.deletePlan,
+        handler: deletePlan,
     }
 };

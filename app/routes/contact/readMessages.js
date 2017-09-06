@@ -1,15 +1,16 @@
 'use strict';
+import { findAllMessages } from "../../controllers/MessageController";
 
-const msgController = require('../../controllers/index').messages;
+// const msgController = require('../../controllers/index').messages;
 
-module.exports = {
-  method: 'GET',
-  path: '/api/messages',
-  config: {
-    auth: {
+export default {
+    method: 'GET',
+    path: '/api/messages',
+    config: {
+        auth: {
             strategy: 'jwt',
             scope: ['admin']
         },
-    handler: msgController.findAllMessages,
-  }
+        handler: findAllMessages,
+    }
 };

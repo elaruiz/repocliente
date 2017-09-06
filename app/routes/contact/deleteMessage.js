@@ -1,15 +1,16 @@
 'use strict';
+import { deleteMessage } from "../../controllers/MessageController";
 
-const msgController = require('../../controllers/index').messages;
+// const msgController = require('../../controllers/index').messages;
 
-module.exports = {
-  method: 'DELETE',
-  path: '/api/message/{id}',
-  config: {
-    auth: {
+export default {
+    method: 'DELETE',
+    path: '/api/message/{id}',
+    config: {
+        auth: {
             strategy: 'jwt',
             scope: ['admin']
         },
-    handler: msgController.deleteMessage,
-  }
+        handler: deleteMessage,
+    }
 };

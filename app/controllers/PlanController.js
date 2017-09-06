@@ -1,11 +1,11 @@
-'use strict'
+'use strict';
 
-const Boom = require('boom');
-const Plan = require('../models').plan;
+import Boom from 'boom';
+// const Plan = require('../models').plan;
+import Models from '../models';
+const Plan = Models.plan;
 
-//import {plan} from '../models';
-
-const findPlan = (req, res) => {
+export const findPlan = (req, res) => {
     return Plan
         .findById(req.params.id)
         .then(plan => {
@@ -15,9 +15,9 @@ const findPlan = (req, res) => {
             return res({data: plan}).code(200);
         })
         .catch((error) => res(Boom.badRequest(error)));
-}
+};
 
-const findAllPlans = (req, res) => {
+export const findAllPlans = (req, res) => {
     return Plan
         .findAll({offset: req.query.page, limit: req.query.size || 20})
         .then(plans => {
@@ -27,17 +27,17 @@ const findAllPlans = (req, res) => {
             return res({data: plans}).code(200);
         })
         .catch((error) => res(Boom.badRequest(error)));
-}
+};
 
-const createPlan = (req, res) => {
+export const createPlan = (req, res) => {
     Plan
         .create(req.payload)
         .then(plan => res({data: plan}).code(201))
         .catch(error => Boom.badRequest(error));
 
-}
+};
 
-const updatePlan = (req, res) => {
+export const updatePlan = (req, res) => {
     return plan
         .update({
             name: req.payload.name || plan.name,
@@ -49,15 +49,16 @@ const updatePlan = (req, res) => {
         })
         .then(plan => res({data: plan}).code(200))
         .catch(error => res(Boom.badRequest(error)))
-}
+};
 
-const deletePlan = (req, res) => {
+export const deletePlan = (req, res) => {
     return plan
         .destroy()
         .then(success => res().code(204))
         .catch(error => res(Boom.badRequest(error)));
-}
+};
 
+/*
 module.exports = {
     findPlan, createPlan, deletePlan, findAllPlans, updatePlan
-}
+}*/

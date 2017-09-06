@@ -1,9 +1,9 @@
 'use strict';
 
-const moment = require('moment');
+// const moment = require('moment');
+import moment from 'moment';
 
-
-module.exports = (sequelize, DataTypes) =>{
+const MemberShipModel = (sequelize, DataTypes) =>{
     const Membership = sequelize.define('membership', {
         id: {type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true},
         payment_method: {type: DataTypes.STRING, allowNull: false},
@@ -20,3 +20,5 @@ module.exports = (sequelize, DataTypes) =>{
         membership.next_payment = future.add(term, 'days')})
     return Membership;
 };
+
+export default MemberShipModel;

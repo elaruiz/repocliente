@@ -1,17 +1,19 @@
 'use strict';
+import { updateUser, verifyUser } from "../../controllers/UserController";
+import { paramsSchema, payloadSchema } from "../../schemas/UserSchema";
 
-const updateUserSchema = require('../../schemas/UserSchema');
-const usersController = require('../../controllers/index').users;
+// const updateUserSchema = require('../../schemas/UserSchema');
+// const usersController = require('../../controllers/index').users;
 
-module.exports = {
+export default {
     method: 'PATCH',
     path: '/api/users/{id}',
     config: {
-        pre: [{ method: usersController.verifyUser, assign: 'user' }],
-        handler: usersController.updateUser,
+        pre: [{ method: verifyUser, assign: 'user' }],
+        handler: updateUser,
         validate: {
-            payload: updateUserSchema.payloadSchema,
-            params: updateUserSchema.paramsSchema
+            payload: payloadSchema,
+            params: paramsSchema
         },
         auth: {
             strategy: 'jwt'

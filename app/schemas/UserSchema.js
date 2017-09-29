@@ -14,12 +14,10 @@ export const checkUserSchema = Joi.object({
     email: Joi.string()
 });
 
-export const authenticateUserSchema = Joi.alternatives().try(
-    Joi.object({
+export const authenticateUserSchema = Joi.object({
         email: Joi.string().email().required(),
         password: Joi.string().required()
-    })
-);
+    });
 
 export const payloadSchema = Joi.object({
     name: Joi.string().alphanum().min(2).max(30),

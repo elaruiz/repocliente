@@ -7,7 +7,8 @@ const PlanModel = (sequelize, DataTypes) => {
         reports: {type: DataTypes.INTEGER},
         price: {type:DataTypes.DECIMAL},
         currency: {type:DataTypes.STRING(3)},
-        term: {type: DataTypes.INTEGER}
+        interval_count: {type: DataTypes.INTEGER},
+        interval_time: {type: DataTypes.STRING, values: ['months', 'years', 'weeks', 'days']}
     },{
         timestamps: true,
         // don't delete database entries but set the newly added attribute deleted_at

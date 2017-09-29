@@ -1,23 +1,30 @@
 'use strict';
 
-// const moment = require('moment');
 import moment from 'moment';
 
 const MemberShipModel = (sequelize, DataTypes) =>{
     const Membership = sequelize.define('membership', {
         id: {type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true},
-        payment_method: {type: DataTypes.STRING, allowNull: false},
-        next_payment: {type: DataTypes.DATEONLY},
+        end_date: {type: DataTypes.DATEONLY},
+        remaining_reports : DataTypes.INTEGER,
     },{
         timestamps: true,
         paranoid: true,
         underscored: true
     }
     );
-    Membership.beforeCreate((membership, term) => {
+    Membership.beforeCreate((membership, plan) => {
         const now = moment(),
             future = now.clone();
-        membership.next_payment = future.add(term, 'days')})
+        let p = plan.data.dataValues;
+        membership.end_date = future.add(p.interval_count, p.interval_time);
+    });
+
+    Membership.associate = (models) => {
+        Membership.belongsTo(models.user, {onDelete: 'CASCADE', hooks: true});
+        Membership.belongsTo(models.plan);
+        Membership.hasMany(models.transaction);
+    };
     return Membership;
 };
 

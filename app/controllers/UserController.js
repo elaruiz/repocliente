@@ -1,15 +1,18 @@
 'use strict';
 
 import Boom from 'boom';
-
-// const func = require('../util/userFunctions');
-import { comparePasswords } from "../util/userFunctions";
-import createToken from '../util/token';
+import { comparePasswords, hashPassword, sendMail, sendMailReminder} from "../util/userFunctions";
+import {createToken} from '../util/token';
 import moment from 'moment';
-
-// const User = require('../models').user;
-import Models from '../models';
+import Models from '../models/';
 const User = Models.user;
+const Membership = Models.membership;
+import schedule from 'node-schedule';
+
+const rule = new schedule.RecurrenceRule();
+rule.dayOfWeek = [new schedule.Range(0, 7)];
+rule.hour = 9;
+rule.minute = 0;
 
 export const verifyUniqueUser = (req, res) => {
     return User
@@ -33,8 +36,8 @@ export const verifyCredentials = (req, res) => {
     return User
         .findOne({
             where: {
-                email: req.payload.email.toLowerCase()
-            }
+                email: req.payload.email.toLowerCase(),
+            },
         })
         .then(user => {
             if (!user) {
@@ -42,15 +45,17 @@ export const verifyCredentials = (req, res) => {
             }
             comparePasswords(password, user.password, (err, suc) => {
                 if (err) {
-                    throw Boom.badRequest(err);
+                    throw new Error(err);
                 }
                 (suc) ? res(user) : res(Boom.badRequest('Incorrect password!'))
             })
-        });
+        })
+        .catch(err => res(Boom.badRequest(error)));
 };
 
 export const verifyUser = (req, res) => {
-    return req.params.id !== req.auth.credentials.id ? res(Boom.notFound('Not Found')) : User
+    return req.params.id !== req.auth.credentials.id ? res(Boom.notFound('Not Found')) :
+        User
         .findOne({
             where: {
                 id: req.params.id
@@ -66,7 +71,7 @@ export const verifyUser = (req, res) => {
 };
 
 export const createUser = (req, res) => {
-    func.hashPassword(req.payload.password, (err, hash) => {
+    hashPassword(req.payload.password, (err, hash) => {
         if (err) {
             throw Boom.badRequest(err);
         }
@@ -94,7 +99,7 @@ export const findUser = (req, res) => {
             if (!user) {
                 return res(Boom.notFound('Not Found'));
             }
-            return res({ data: user }).code(200);
+            return res(user).code(200);
 
         })
         .catch((error) => res(Boom.badRequest(error)));
@@ -103,24 +108,36 @@ export const findUser = (req, res) => {
 export const updateUser = (req, res) => {
     let user = req.pre.user;
     return user
-        .update({
-            name: req.payload.name || user.name,
-            email: req.payload.email || user.email,
-            admin: req.payload.admin || user.admin,
-        })
-        .then((user) => res({ data: user }).code(200))
+        .update(req.payload)
+        .then((user) => res({ data: user}).code(200))
         .catch((error) => res(Boom.badRequest(error)))
-
 };
 
 export const deleteUser = (req, res) => {
     let user = req.pre.user;
+    Membership.destroy({where: {user_id: user.id}});
     return user.destroy()
         .then(success => res().code(204))
         .catch(error => res(Boom.badRequest(error)))
 };
 
+export const resetPassword = async (req, res) => {
+    try {
+    let user = await User.findOne({ where: {id: req.pre.token.id}});
+    hashPassword(req.payload.password, (err, hash) => {
+        if (err) {
+            throw Boom.badRequest(err);
+        }
+        user.update({password: hash})
+            .then(user => res({ data: user }).code(200))
+            .catch(error => Boom.badRequest(error));
+    });} catch (e) {
+        res(Boom.badRequest(e))
+    }
+};
+
 export const setLastLogin = (req, res) => {
+    let now = moment.utc();
     return User
         .findOne({
             where: {
@@ -129,8 +146,50 @@ export const setLastLogin = (req, res) => {
         })
         .then(user => {
             user
-                .update()
+                .update({last_login: now}, {silent: true})
                 .then(() => res({ data: user }).code(200))
                 .catch((error) => Boom.badRequest(error))
         });
 };
+
+export const forgot_password = async (req, res) => {
+    try {
+        let user = await User.findOne({where: {email: req.payload.email}});
+        if (!user)  res(Boom.badRequest('User not found'));
+        else{
+        let token = createToken(user);
+        sendMail(token, user);
+        res('Mail enviado')
+        }
+    } catch (err) {
+        res(Boom.badRequest(err));
+    }
+
+};
+
+const findUsersSubAboutToExpire = async () => {
+    try{
+    const now = moment(),
+    future = now.clone().add(5, 'day').format('YYYY-MM-DD');
+    let usersId = await Membership.findAll({
+            where: {
+                end_date: { $lte: future}
+            },
+            attributes: ['user_id'],
+            group: ['user_id'],
+        });
+        let ids = [];
+        for (let i = 0, len = usersId.length; i < len; i++) {
+            ids.push(usersId[i].user_id);
+          }
+    let users = await User.findAll({where:{id:{$in: ids}}})
+    return users;
+
+} catch (e) {
+    console.log(e) }
+}
+
+schedule.scheduleJob(rule, async () => { 
+    let users = await findUsersSubAboutToExpire();
+    sendMailReminder(users);
+});

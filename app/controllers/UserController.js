@@ -9,10 +9,10 @@ const User = Models.user;
 const Membership = Models.membership;
 import schedule from 'node-schedule';
 
-const rule = new schedule.RecurrenceRule();
+/*const rule = new schedule.RecurrenceRule();
 rule.dayOfWeek = [new schedule.Range(0, 7)];
 rule.hour = 9;
-rule.minute = 0;
+rule.minute = 0; */
 
 export const verifyUniqueUser = (req, res) => {
     return User
@@ -25,8 +25,6 @@ export const verifyUniqueUser = (req, res) => {
             if (user) {
                 return res(Boom.badRequest('Email taken'));
             }
-            // If everything checks out, send the payload through
-            // to the route handler
             res(req.payload);
         });
 };
@@ -80,7 +78,7 @@ export const createUser = (req, res) => {
             email: req.payload.email.toLowerCase(),
             password: hash,
         })
-            .then(user => res({ token: createToken(user), data: user }).code(201))
+            .then(user => res({user : { token: createToken(user), data: user }}).code(201))
             .catch(error => Boom.badRequest(error));
     });
 };
@@ -188,8 +186,8 @@ const findUsersSubAboutToExpire = async () => {
 } catch (e) {
     console.log(e) }
 }
-
+/*
 schedule.scheduleJob(rule, async () => { 
     let users = await findUsersSubAboutToExpire();
     sendMailReminder(users);
-});
+}); */

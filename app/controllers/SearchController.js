@@ -53,6 +53,7 @@ export const deleteSearches = (req, res) => {
 };
 
 export const searchProperty = (req, res) => {
+    console.log(`${API_PROCESSOR}/api/property/process/${req.params.referencia}`)
     request({
         uri: `${API_PROCESSOR}/api/property/process/${req.params.referencia}`,
         json: true
@@ -63,7 +64,7 @@ export const searchProperty = (req, res) => {
             .then(success => success)
             .catch(e => {throw new Error(e)});
             }
-        res(response.data).code(200);
+        res(response).code(200);
         })
         .catch(e => res(Boom.badRequest(e)))
 }

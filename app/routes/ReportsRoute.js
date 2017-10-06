@@ -1,6 +1,6 @@
 
 
-import {createReport, findUserReport, findUserReports, checkUserReports, remainingReports} from "../controllers/ReportController";
+import {createReport, findUserReport, findUserReports, checkUserReports, remainingReports, generateUserReport} from "../controllers/ReportController";
 
 const createReportRoute =  {
     method: 'POST',
@@ -48,9 +48,22 @@ const generateReportRoute = {
     }
 };
 
+const getReportRoute = {
+    method: 'GET',
+    path: '/api/reports/property/{reference}',
+    config: {
+        auth: {
+            strategy: 'jwt',
+            mode: 'try'
+        },
+        handler: generateUserReport  
+    }
+};
+
 export default [
     createReportRoute,
     readUserReportsRoute,
     readUserReportRoute,
-    generateReportRoute
+    generateReportRoute,
+    getReportRoute
 ];

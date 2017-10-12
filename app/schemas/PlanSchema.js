@@ -1,21 +1,97 @@
 const Joi = require('joi');
 
 export const createPlanSchema = Joi.object({
-    name: Joi.string().required(),
-    description: Joi.string().required(),
-    reports: Joi.number().integer().min(1).max(100).required(),
-    price: Joi.number().required(),
-    currency: Joi.string().min(1).max(3).required(),
-    interval_time: Joi.string().valid('month', 'year', 'week', 'day').required(),
-    interval_count: Joi.number().integer().min(1).required(),
+    name: Joi.string().required().options({
+        language: {
+          any: {
+            required: 'Este campo es requerido',
+            empty: 'Este campo no puede ser vacío'
+          }
+        }
+      }),
+    description: Joi.string().required().options({
+        language: {
+          any: {
+            required: 'Este campo es requerido',
+            empty: 'Este campo no puede ser vacío'
+          }
+        }
+      }),
+    reports: Joi.number().integer().min(1).required().options({
+        language: {
+          any: {
+            required: 'Este campo es requerido',
+            empty: 'Este campo no puede ser vacío'
+          },
+          number: {
+            min: 'Debe ser igual o mayor que {{limit}}',
+            }
+        }
+      }),
+    price: Joi.number().min(0).required().options({
+        language: {
+          any: {
+            required: 'Este campo es requerido',
+            empty: 'Este campo no puede ser vacío'
+          },
+          number: {
+            min: 'Debe ser igual o mayor que {{limit}}',
+            }
+        }
+      }),
+    currency: Joi.string().min(1).max(3).required().options({
+        language: {
+          any: {
+            required: 'Este campo es requerido',
+            empty: 'Este campo no puede ser vacío'
+          }
+        }
+      }),
+    interval_time: Joi.string().valid('month', 'year', 'week', 'day').required().options({
+        language: {
+          any: {
+            required: 'Este campo es requerido',
+            empty: 'Este campo no puede ser vacío'
+          }
+        }
+      }),
+    interval_count: Joi.number().integer().min(1).required().options({
+        language: {
+          any: {
+            required: 'Este campo es requerido',
+            empty: 'Este campo no puede ser vacío'
+          },
+          number: {
+            min: 'Debe ser igual o mayor que {{limit}}',
+         }
+        }
+      }),
 });
 
 export const updatePlanSchema = Joi.object({
     name: Joi.string(),
     description: Joi.string(),
-    reports: Joi.number().integer().min(1).max(100),
-    price: Joi.number(),
+    reports: Joi.number().integer().min(1).options({
+        language: {
+            number: {
+                min: 'Debe ser igual o mayor que {{limit}}',
+            }
+        }
+      }),
+    price: Joi.number().min(0).options({
+        language: {
+          number: {
+            min: 'Debe ser igual o mayor que {{limit}}',
+            }
+        }
+      }),
     currency: Joi.string().min(1).max(3),
     interval_time: Joi.string().valid('month', 'year', 'week', 'day'),
-    interval_count: Joi.number().integer().min(1),
+    interval_count: Joi.number().integer().min(1).options({
+        language: {
+          number: {
+            min: 'Debe ser igual o mayor que {{limit}}',
+            }
+        }
+      }),
 });

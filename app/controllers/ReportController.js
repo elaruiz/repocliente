@@ -93,5 +93,5 @@ export const generateUserReport = (req, res) => {
     report(req.params.reference)
     .then(file => {
         res.file(file)
-    }).catch(err => {throw err})
+    }).catch(err => {res(Boom.badImplementation())})
 }

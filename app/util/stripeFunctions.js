@@ -9,7 +9,7 @@ export const stripeCharge = async (req,data) => {
     try {
        return await stripe.charges.create({
             amount: Math.round(data.price * 100),
-            currency: data.currency,
+            currency: data.currency.toUpperCase(),
             description: `Charge to user: ${req.auth.credentials.id}`,
             source: req.payload.stripeToken});
     } catch (e) {

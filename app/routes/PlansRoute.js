@@ -1,6 +1,7 @@
 
 import {createPlan, deletePlan, findAllPlans, findPlan, updatePlan} from "../controllers/PlanController";
 import {createPlanSchema, updatePlanSchema} from "../schemas/PlanSchema";
+import {ErrorMsg} from "../util/responses";
 
 
 const createPlanRoute = {
@@ -14,7 +15,8 @@ const createPlanRoute = {
         handler: createPlan,
         // Validate the payload against the Joi schema
         validate: {
-            payload: createPlanSchema
+            payload: createPlanSchema,
+            failAction: (req,res,source, error) => res(ErrorMsg(req,res,source, error))
         }
     }
 };
@@ -61,7 +63,8 @@ const updatePlanRoute = {
         handler: updatePlan,
         // Validate the payload against the Joi schema
         validate: {
-            payload: updatePlanSchema
+            payload: updatePlanSchema,
+            failAction: (req,res,source, error) => res(ErrorMsg(req,res,source, error))
         }
     }
 };

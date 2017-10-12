@@ -3,12 +3,10 @@ import {
     getConfiguration, updateConfiguration
 } from "../controllers/ConfigurationController";
 
-let auth = {
+const auth = {
     scope: ['admin'],
     strategy: 'jwt'
 };
-
-auth = false;
 
 const listAllConfigurationRoute = {
     method: 'GET',

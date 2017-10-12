@@ -1,9 +1,11 @@
 
 import {
     findUser, deleteUser, forgot_password, verifyCredentials, setLastLogin,
-    resetPassword, verifyUniqueUser, createUser, updateUser, findUsersSubAboutToExpire
+    resetPassword, verifyUniqueUser, createUser, updateUser, findUsersSubAboutToExpire,
+    findAllUsers, findUserById
 } from "../controllers/UserController";
 import {createToken, decodeToken} from "../util/token"
+import {ErrorMsg} from "../util/responses";
 import {authenticateUserSchema, createUserSchema, payloadSchema} from "../schemas/UserSchema";
 import _ from 'lodash';
 
@@ -14,18 +16,6 @@ const userRoute = {
     config: {
         auth: 'jwt',
         handler: findUser
-    }
-};
-
-const deleteUserRoute = {
-    method: 'DELETE',
-    path: '/api/users',
-    config: {
-        pre: [{ method: findUser, assign: 'user' }],
-        handler: deleteUser,
-        auth: {
-            strategy: 'jwt'
-        }
     }
 };
 
@@ -46,20 +36,12 @@ const loginUserRoute = {
         pre: [{ method: verifyCredentials, assign: 'user' }],
         handler: (req, res) => {
             let user = _.omit(req.pre.user.dataValues, ['password']);
-            res({user: { token: createToken(req.pre.user), data: user }}).code(200);
+            res({user: { token: createToken(req.pre.user), data: user } }).code(200);
         },
       validate: {
-            payload: authenticateUserSchema
+            payload: authenticateUserSchema,
+            failAction: (req,res,source, error) => res(ErrorMsg(req,res,source, error))
         }
-    }
-};
-
-const logoutUserRoute = {
-    method: 'GET',
-    path: '/api/users/logout',
-    config: {
-        auth: 'jwt',
-        handler: setLastLogin
     }
 };
 
@@ -83,7 +65,8 @@ const signupUserRoute = {
         handler: createUser,
         // Validate the payload against the Joi schema
         validate: {
-            payload: createUserSchema
+            payload: createUserSchema,
+            failAction: (req,res,source, error) => res(ErrorMsg(req,res,source, error))
         }
     }
 };
@@ -95,11 +78,68 @@ const updateUserRoute ={
         pre: [{ method: findUser,  assign: 'user' }],
         handler: updateUser,
         validate: {
-            payload: payloadSchema
+            payload: payloadSchema,
+            failAction: (req,res,source, error) => res(ErrorMsg(req,res,source, error))
         },
         auth: {
             strategy: 'jwt'
         }
+    }
+};
+
+const usersRoute = {
+    method: 'GET',
+    path: '/api/users',
+    config: {
+        auth: {
+            strategy: 'jwt',
+            scope: ['admin']
+        },
+        handler: findAllUsers
+    }
+};
+
+const userByIdRoute = {
+    method: 'GET',
+    path: '/api/user/{id}',
+    config: {
+        auth: {
+            strategy: 'jwt',
+            scope: ['admin']
+        },
+        handler: findUserById
+    }
+};
+
+const deleteUserRoute = {
+    method: 'DELETE',
+    path: '/api/user/{id}',
+    config: {
+        pre: [{ method: findUserById,  assign: 'user' }],
+        auth: {
+            strategy: 'jwt',
+            scope: ['admin']
+        },
+        handler: deleteUser,
+        
+    }
+};
+
+const updateUserIdRoute ={
+    method: ['PATCH', 'PUT'],
+    path: '/api/user/{id}',
+    config: {
+        pre: [{ method: findUserById,  assign: 'user' }],
+        auth: {
+            strategy: 'jwt',
+            scope: ['admin']
+        },
+        handler: updateUser,
+        validate: {
+            payload: payloadSchema,
+            failAction: (req,res,source, error) => res(ErrorMsg(req,res,source, error))
+        },
+        
     }
 };
 
@@ -110,6 +150,9 @@ export default [
     updateUserRoute,
     forgotPasswordRoute,
     resetPasswordRoute,
-    logoutUserRoute,
     userRoute,
+    usersRoute,
+    userByIdRoute,
+    updateUserIdRoute
+
 ];

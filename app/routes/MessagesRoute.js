@@ -42,7 +42,10 @@ const sendMessageRoute= {
     method: 'POST',
     path: '/api/messages',
     config: {
-        auth: false,
+        auth: {
+            strategy: 'jwt',
+            mode: 'try'
+        },
         handler: createMessage,
         // Validate the payload against the Joi schema
         validate: {

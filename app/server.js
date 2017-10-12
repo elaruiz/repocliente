@@ -23,7 +23,7 @@ server.register({
         allowCredentials: 'true',
         exposeHeaders: ['content-type', 'content-length'],
         maxAge: 8440,
-        methods: ['POST, GET, OPTIONS', 'PUT', 'PATCH'],
+        methods: ['POST, GET, OPTIONS', 'PUT', 'PATCH', 'DELETE'],
         headers: ['Accept', 'Content-Type', 'Authorization', 'X-Requested-With'], 
 	}
 });

@@ -7,6 +7,7 @@ import membershipsRoute from "./MembershipsRoute";
 import searchesRoute from "./SearchesRoute";
 import transactionsRoute from "./TransactionsRoute";
 import reportsRoute from "./ReportsRoute";
+import statusRoute from './StatusRoute';
 
 export default [
     ...messagesRoute,
@@ -15,6 +16,7 @@ export default [
     ...membershipsRoute,
     ...searchesRoute,
     ...transactionsRoute,
-    ...reportsRoute
+    ...reportsRoute,
+    ...statusRoute
 ];
 

@@ -46,3 +46,5 @@ export const API_PROCESSOR = process.env.API_PROCESSOR;
 // API CATASTRO
 
 export const API_CATASTRO = process.env.API_CATASTRO;
+
+export const API_SCRAPPER = process.env.API_SCRAPPER;

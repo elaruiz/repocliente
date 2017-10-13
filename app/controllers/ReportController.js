@@ -87,7 +87,7 @@ export const report = (reference) => {
     date = now.clone();
     const filename = `./public/report_${date}_${reference}.pdf`;
     return new Promise(function (fulfill, reject){
-        request(`${API_PROCESSOR}/api/property/process/${reference}/pdf`)
+        request(`${API_PROCESSOR}/property/process/${reference}/pdf`)
         .on('error', (err) => { 
             console.log(err)
             reject(err);

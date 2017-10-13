@@ -65,7 +65,7 @@ export const deleteSearches = (req, res) => {
 
 export const searchProperty = (req, res) => {
     request({
-        uri: `${API_PROCESSOR}/api/property/process/${req.params.referencia}`,
+        uri: `${API_PROCESSOR}/property/process/${req.params.referencia}`,
         json: true
     })
     .then(response => {

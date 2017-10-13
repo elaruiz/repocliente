@@ -8,9 +8,28 @@ const Message = Models.message;
 // module.exports = {
 
     export const findAllMessages = (req, res) => {
+        let size = parseInt(req.query.size) || 15,
+        page= parseInt(req.query.page) || 1,
+        offset = size * (page - 1);
         return Message
-            .findAll({ offset: req.query.page, limit: req.query.size || 20, order: [['created_at', 'DESC']] })
-            .then(msgs => res({data: msgs}).code(200) )
+            .findAndCountAll({ 
+                offset: offset, 
+                limit: size, 
+                order: [['created_at', 'DESC']] 
+            })
+            .then(messages => { 
+                let pages = Math.ceil(messages.count / size);
+                res({
+                    data: messages.rows, 
+                    meta: {
+                        total: messages.count, 
+                        pages: pages,
+                        items: size,
+                        page: offset+1      
+                    }
+                })
+                .code(200)
+            })
             .catch((error) => res(Boom.badRequest(error)));
     };
 
@@ -29,8 +48,7 @@ const Message = Models.message;
         
         } catch (error) {
             res(Boom.badRequest(error))
-        }
-                    
+        }               
     };
 
     export const deleteMessage = (req, res) => {

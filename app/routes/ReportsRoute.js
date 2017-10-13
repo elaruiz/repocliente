@@ -1,8 +1,13 @@
 
+import {createReport, 
+    findUserReport, 
+    findUserReports, 
+    checkUserReports, 
+    remainingReports, 
+    generateUserReport} from "../controllers/ReportController";
 
-import {createReport, findUserReport, findUserReports, checkUserReports, remainingReports, generateUserReport} from "../controllers/ReportController";
 
-const createReportRoute =  {
+    const createReportRoute =  {
     method: 'POST',
     path: '/api/reports',
     config: {

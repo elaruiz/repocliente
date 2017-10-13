@@ -1,4 +1,5 @@
-import {createSearch, deleteSearches, 
+import {
+    createSearch, deleteSearches, 
     findMostWanted, findUserSearches, 
     earchProperty, searchByAddress,
     searchMunicipalities, searchProperty,

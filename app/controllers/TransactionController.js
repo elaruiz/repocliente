@@ -12,16 +12,18 @@ const Transaction = Models.transaction;
 const Membership = Models.membership;
 const Plan = Models.plan;
 const User = Models.user;
+const Sequelize = Models.Sequelize;
+const Op = Sequelize.Op;
 
 /* Stripe Transactions */
 
 export const paymentStripe = async (req, res ) => {
     let data = Object.assign({}, req.pre.plan.data.dataValues);
     try{
-    let charge = await stripeCharge(req, data);
-    let membership = await createMembership(req);
-    let transaction = await createTransactionStripe(charge, membership);
-    res({data: membership}).code(201);
+        let charge = await stripeCharge(req, data);
+        let membership = await createMembership(req);
+        let transaction = await createTransactionStripe(charge, membership);
+        res({data: membership}).code(201);
     } catch(e) {
         res(Boom.badRequest(e));
     }
@@ -45,7 +47,7 @@ let createTransactionStripe = async (charge, membership) => {
         .create({
             paid_date: moment.unix(charge.created).utc(),
             total: charge.amount/100,
-            currency: charge.currency,
+            currency: charge.currency.toUpperCase(),
             status: charge.status,
             transaction_id: charge.id,
             description: charge.description,
@@ -86,18 +88,18 @@ let createTransactionPaypal = async (charge, membership) => {
     try {
         return await Transaction
             .create({
-                paid_date: charge.transactions[0].related_resources[0].sale.create_time,
-                total: charge.transactions[0].related_resources[0].sale.amount.total,
-                currency: charge.transactions[0].related_resources[0].sale.amount.currency,
-                status: charge.transactions[0].related_resources[0].sale.state,
-                transaction_id: charge.transactions[0].related_resources[0].sale.id,
+                paid_date: charge.create_time,
+                total: charge.transactions[0].amount.total,
+                currency: charge.transactions[0].amount.currency,
+                status: charge.state,
+                transaction_id: charge.id,
                 description: charge.transactions[0].description,
                 payment_method: "paypal",
                 membership_id: membership.id
             });
     }
     catch(e) {
-        new Error(e)
+       throw new Error(e)
     }
 };
 
@@ -130,41 +132,79 @@ const searchBalances = (req, res) => {
 
 export const findUserBalance = (req, res) => {
     let q = _.omit(req.query, ['start', 'end', 'size', 'page']);
+    let size = parseInt(req.query.size) || 15,
+    page= parseInt(req.query.page) || 1,
+    offset = size * (page - 1);
     return Transaction
-        .findAll({
-            offset: req.query.page,
-            limit: req.query.size || 20,
+        .findAndCountAll({
+            offset: offset, 
+            limit: size,
             order: [['created_at', 'DESC']],
-            where: (req.query.start && req.query.end)? Object.assign({created_at: {$between: [req.query.start, req.query.end]}}, q) : q,
+            where: (req.query.start && req.query.end)? 
+            Object.assign({created_at: {[Op.between]: [req.query.start, req.query.end]}}, q) : q,
             include: [{
                 model : Membership,
                 where: {user_id: req.auth.credentials.id },
                 include: {model:Plan, attributes: ['id', 'name']},
                 attributes: ['id'] }],
-            attributes: ['id', 'paid_date', 'total', 'payment_method', 'transaction_id']  
+            attributes: ['id', 'paid_date', 'total', 'currency', 'payment_method', 'transaction_id']  
         })
-        .then(transactions => res({data: transactions}).code(200))
+        .then(transactions => { 
+            let pages = Math.ceil(transactions.count / size);
+            res({
+                data: transactions.rows, 
+                meta: {
+                    total: transactions.count, 
+                    pages: pages,
+                    items: size,
+                    page: offset+1      
+                }
+            }).code(200)
+        })
         .catch((error) => res(Boom.badRequest(error)));
 };
 
 export const findAllBalances = (req, res) => {
     let q = _.omit(req.query, ['start', 'end', 'size', 'page']);
+    let size = parseInt(req.query.size) || 15,
+    page= parseInt(req.query.page) || 1,
+    offset = size * (page - 1);
     return Transaction
-        .findAll({
-            offset: req.query.page,
-            limit: req.query.size || 20,
+        .findAndCountAll({
+            offset: offset, 
+            limit: size,
             order: [['created_at', 'DESC']],
-            where: (req.query.start && req.query.end)? Object.assign({created_at: {$between: [req.query.start, req.query.end]}}, q) : q,
+            where: (req.query.start && req.query.end)? Object.assign({created_at: {[Op.between]: [req.query.start, req.query.end]}}, q) : q,
             include: [{ 
-                model : Membership, 
+                model : Membership,
+                paranoid: false, 
                 where:  (req.params.userId) ? {user_id :req.params.userId} : 
                 (req.params.planId) ? {plan_id:req.params.planId} : 
                 {},
-                include: [{model:Plan, attributes: ['id', 'name']}, 
-                {model:User, attributes: ['id', 'name']}],
+                include: [
+                    {model:Plan, 
+                        attributes: ['id', 'name']
+                    }, 
+                    {
+                        model:User,
+                        paranoid: false, 
+                        attributes: ['id', 'name']
+                    }
+                ],
                 attributes: ['id'] }],
-            attributes: ['id', 'paid_date', 'total', 'payment_method','transaction_id']
+            attributes: ['id', 'paid_date', 'total', 'currency', 'payment_method','transaction_id']
         })
-        .then(transactions => res({data: transactions}).code(200) )
+        .then(transactions => { 
+            let pages = Math.ceil(transactions.count / size);
+            res({
+                data: transactions.rows, 
+                meta: {
+                    total: transactions.count, 
+                    pages: pages,
+                    items: size,
+                    page: offset+1      
+                }
+            }).code(200)
+        })
         .catch((error) => res(Boom.badRequest(error)));
 };

@@ -93,7 +93,7 @@ const invoiceByPlanRoute = {
 
 const invoicesUserRoute = {
     method: 'GET',
-    path: '/api/my-invoices',
+    path: '/api/invoices/my-invoices',
     config: {
         auth: {
             strategy: 'jwt'

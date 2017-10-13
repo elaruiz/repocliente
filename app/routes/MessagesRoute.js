@@ -1,6 +1,7 @@
 
 import {createMessage, deleteMessage, findAllMessages, findMessage} from "../controllers/MessageController";
 import {MessageSchema} from "../schemas/MessageSchema";
+import {ErrorMsg} from "../util/responses";
 
 const deleteMessageRoute = {
     method: 'DELETE',
@@ -49,7 +50,8 @@ const sendMessageRoute= {
         handler: createMessage,
         // Validate the payload against the Joi schema
         validate: {
-            payload: MessageSchema
+            payload: MessageSchema,
+            failAction: (req,res,source, error) => res(ErrorMsg(req,res,source, error))
         }
     }
 };

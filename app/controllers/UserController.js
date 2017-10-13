@@ -9,6 +9,8 @@ const User = Models.user;
 const Membership = Models.membership;
 import schedule from 'node-schedule';
 import _ from 'lodash';
+const Sequelize = Models.Sequelize;
+const Op = Sequelize.Op;
 
 /*const rule = new schedule.RecurrenceRule();
 rule.dayOfWeek = [new schedule.Range(0, 7)];
@@ -123,15 +125,27 @@ export const findUserById = (req, res) => {
 };
 
 export const findAllUsers = (req, res) => {
+    let size = parseInt(req.query.size) || 15,
+    page= parseInt(req.query.page) || 1,
+    offset = size * (page - 1);
     return User
-        .findAll({
-            offset: req.query.page, 
-            limit: req.query.size || 20,
+        .findAndCountAll({
+            offset: offset, 
+            limit: size,
             attributes: {
                 exclude: ['password']
             }
         })
-        .then(users => res({data: users}).code(200))
+        .then(users => {
+            let pages = Math.ceil(users.count / size);
+            res({
+                data: users.rows, 
+                meta: {
+                    total: users.count, 
+                    pages: pages,
+                    items: size,
+                    page: offset+1      
+                }}).code(200)})
         .catch((error) => res(Boom.badRequest(error)));
 };
 
@@ -218,7 +232,7 @@ const findUsersSubAboutToExpire = async () => {
     future = now.clone().add(5, 'day').format('YYYY-MM-DD');
     let usersId = await Membership.findAll({
             where: {
-                end_date: { $lte: future}
+                end_date: { [Op.lte]: future}
             },
             attributes: ['user_id'],
             group: ['user_id'],
@@ -227,7 +241,7 @@ const findUsersSubAboutToExpire = async () => {
         for (let i = 0, len = usersId.length; i < len; i++) {
             ids.push(usersId[i].user_id);
           }
-    let users = await User.findAll({where:{id:{$in: ids}}})
+    let users = await User.findAll({where:{id:{[Op.in]: ids}}})
     return users;
 
 } catch (e) {

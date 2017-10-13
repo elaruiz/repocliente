@@ -3,25 +3,37 @@
 import Boom from 'boom';
 import request from 'request';
 import Models from '../models';
+import { API_PROCESSOR } from "../constants";
+import fs from 'fs';
+import moment from 'moment';
 const Report = Models.report;
 const User = Models.user;
 const Membership = Models.membership;
 const Sequelize = Models.Sequelize;
-import { API_PROCESSOR } from "../constants";
-import fs from 'fs';
-import path from 'path';
-import moment from 'moment';
+const Op = Sequelize.Op;
 
 export const findUserReports = (req, res) => {
-    return User
-        .findOne({ where: { id: req.auth.credentials.id }})
-        .then(user => { 
-            user.getReports({offset: req.query.page, limit: req.query.size || 10})
-            .then(reports => res({data: reports}).code(200))
-            .catch((error) => res(Boom.badRequest(error)));
+    let size = parseInt(req.query.size) || 15,
+    page= parseInt(req.query.page) || 1,
+    offset = size * (page - 1);
+    return Report
+        .findAndCountAll({ where: { user_id: req.auth.credentials.id }, offset: offset, limit: size })
+        .then(reports => { 
+            let pages = Math.ceil(reports.count / size);
+            res({
+                data: reports.rows, 
+                meta: {
+                    total: reports.count, 
+                    pages: pages,
+                    items: size,
+                    page: offset+1      
+                }
+            })
+            .code(200)
         })
         .catch((error) => res(Boom.badRequest(error)));
 };
+
 
 export const findUserReport = (req, res) => {
     return Report
@@ -58,7 +70,7 @@ export const remainingReports = async (req, res) => {
         .findOne({
             where: {
                 user_id: req.auth.credentials.id,
-                remaining_reports: { $gt: 0}   
+                remaining_reports: { [Op.gt] : 0}
             },
             order: [['end_date', 'ASC']]
         })
@@ -75,23 +87,24 @@ export const report = (reference) => {
     date = now.clone();
     const filename = `./public/report_${date}_${reference}.pdf`;
     return new Promise(function (fulfill, reject){
-    request(`${API_PROCESSOR}/api/property/process/${reference}/pdf`)
-    .on('error', (err) => { 
-        console.log(err)
-        reject(err);
-    })
-    .on('response', (data) =>{
-        data.pipe(fs.createWriteStream(filename))
-        .on('finish', () => {
-            fulfill(filename)
+        request(`${API_PROCESSOR}/api/property/process/${reference}/pdf`)
+        .on('error', (err) => { 
+            console.log(err)
+            reject(err);
+        })
+        .on('response', (data) =>{
+            data.pipe(fs.createWriteStream(filename))
+            .on('finish', () => {
+                fulfill(filename)
+            })
         })
     })
-})
 }
 
 export const generateUserReport = (req, res) => { 
     report(req.params.reference)
     .then(file => {
         res.file(file)
-    }).catch(err => {res(Boom.badImplementation())})
+    })
+    .catch(err => {res(Boom.badImplementation())})
 }

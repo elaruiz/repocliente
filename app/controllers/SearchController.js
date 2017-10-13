@@ -80,6 +80,10 @@ export const searchProperty = (req, res) => {
 }
 
 export const searchByAddress = (req, res) => {
+    const { query } = req;
+    const { province, municipality, street, type, number } = query;
+
+    const url = `${API_CATASTRO}/property/address?province=${province}&municipality=${municipality}&type=${type}&street=${street}&number=${number}`
     request({
         uri: url,
         json: true

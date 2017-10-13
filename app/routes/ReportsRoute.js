@@ -59,8 +59,8 @@ const getReportRoute = {
     config: {
         auth: {
             strategy: 'jwt',
-            mode: 'try'
         },
+        pre: [{ method: checkUserReports, assign: 'reports' }],
         handler: generateUserReport  
     }
 };

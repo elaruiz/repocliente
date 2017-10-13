@@ -8,6 +8,9 @@ import Models from '../models/';
 const User = Models.user;
 const Membership = Models.membership;
 import schedule from 'node-schedule';
+import _ from 'lodash';
+const Sequelize = Models.Sequelize;
+const Op = Sequelize.Op;
 
 /*const rule = new schedule.RecurrenceRule();
 rule.dayOfWeek = [new schedule.Range(0, 7)];
@@ -23,7 +26,7 @@ export const verifyUniqueUser = (req, res) => {
         })
         .then(user => {
             if (user) {
-                return res(Boom.badRequest('Email taken'));
+                return res(Boom.badRequest('Este email ya se encuentra registrado'));
             }
             res(req.payload);
         });
@@ -48,7 +51,7 @@ export const verifyCredentials = (req, res) => {
                 (suc) ? res(user) : res(Boom.badRequest('Incorrect password!'))
             })
         })
-        .catch(err => res(Boom.badRequest(error)));
+        .catch(err => res(Boom.badRequest(err)));
 };
 
 export const verifyUser = (req, res) => {
@@ -79,7 +82,7 @@ export const createUser = (req, res) => {
             password: hash,
         })
             .then(user => res({user : { token: createToken(user), data: user }}).code(201))
-            .catch(error => Boom.badRequest(error));
+            .catch(err => Boom.badRequest(err));
     });
 };
 
@@ -103,12 +106,70 @@ export const findUser = (req, res) => {
         .catch((error) => res(Boom.badRequest(error)));
 };
 
+export const findUserById = (req, res) => {
+    return User
+        .findOne({
+            where: {id :req.params.id},
+            attributes: {
+                exclude: ['password']
+            }
+        })
+        .then(user => {
+            if (!user) {
+                return res(Boom.notFound('Not Found'));
+            }
+            return res(user).code(200);
+
+        })
+        .catch((error) => res(Boom.badRequest(error)));
+};
+
+export const findAllUsers = (req, res) => {
+    let size = parseInt(req.query.size) || 15,
+    page= parseInt(req.query.page) || 1,
+    offset = size * (page - 1);
+    return User
+        .findAndCountAll({
+            offset: offset, 
+            limit: size,
+            attributes: {
+                exclude: ['password']
+            }
+        })
+        .then(users => {
+            let pages = Math.ceil(users.count / size);
+            res({
+                data: users.rows, 
+                meta: {
+                    total: users.count, 
+                    pages: pages,
+                    items: size,
+                    page: offset+1      
+                }}).code(200)})
+        .catch((error) => res(Boom.badRequest(error)));
+};
+
 export const updateUser = (req, res) => {
     let user = req.pre.user;
-    return user
-        .update(req.payload)
-        .then((user) => res({ data: user}).code(200))
+    let newPassword = null;
+    if (req.payload.password) {
+        hashPassword(req.payload.password, (err, hash) => {
+            if (err) {
+                throw new Error(err);
+            }
+            user.update(Object.assign({}, _.omit(req.payload, ['password']), {password: hash}))
+            .then((user) => { 
+                res({ data: user}).code(200) })
+            .catch((error) => res(Boom.badRequest(error)))
+        })  
+    }
+    else {
+        user.update(req.payload)
+        .then((user) => { 
+            res({ data: user}).code(200) })
         .catch((error) => res(Boom.badRequest(error)))
+    }
+        
 };
 
 export const deleteUser = (req, res) => {
@@ -171,7 +232,7 @@ const findUsersSubAboutToExpire = async () => {
     future = now.clone().add(5, 'day').format('YYYY-MM-DD');
     let usersId = await Membership.findAll({
             where: {
-                end_date: { $lte: future}
+                end_date: { [Op.lte]: future}
             },
             attributes: ['user_id'],
             group: ['user_id'],
@@ -180,7 +241,7 @@ const findUsersSubAboutToExpire = async () => {
         for (let i = 0, len = usersId.length; i < len; i++) {
             ids.push(usersId[i].user_id);
           }
-    let users = await User.findAll({where:{id:{$in: ids}}})
+    let users = await User.findAll({where:{id:{[Op.in]: ids}}})
     return users;
 
 } catch (e) {

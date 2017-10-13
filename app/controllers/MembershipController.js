@@ -28,7 +28,6 @@ export const findUserMemberships = (req, res) => {
         .catch(error => res(Boom.badRequest(error)));
 };
 
-
 export const findUserMembership = (req, res) => {
 
     return Membership

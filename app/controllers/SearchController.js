@@ -9,17 +9,28 @@ const User = Models.user;
 const Sequelize = Models.Sequelize;
 
 export const findUserSearches = (req, res) => {
-    return User
-        .findOne({ where: { id: req.auth.credentials.id}})
-        .then(user => { 
-            user.getSearches({offset: req.query.page, limit: req.query.size || 10})
-            .then(searches => res({data: searches}).code(200))
-            .catch((error) => res(Boom.badRequest(error)));
+    let size = parseInt(req.query.size) || 15,
+    page= parseInt(req.query.page) || 1,
+    offset = size * (page - 1);
+    return Search
+        .findAndCountAll({ where: { user_id: req.auth.credentials.id }, offset: offset, limit: size })
+        .then(searches => { 
+            let pages = Math.ceil(searches.count / size);
+            res({
+                data: searches.rows, 
+                meta: {
+                    total: searches.count, 
+                    pages: pages,
+                    items: size,
+                    page: offset+1      
+                }
+            })
+            .code(200)
         })
         .catch((error) => res(Boom.badRequest(error)));
 };
 
-export const findMostWanted = (req, res) => {
+export const findMostWanted = async (req, res) => {
     return Search
         .findAll({
             group: ['reference', 'url', 'address'],
@@ -28,7 +39,7 @@ export const findMostWanted = (req, res) => {
             offset: req.query.page, 
             limit: req.query.size || 10
         })
-        .then(serach => { res({data: serach}).code(200) })
+        .then(search => { res({data: search}).code(200) })
         .catch((error) => res(Boom.badRequest(error)));
 };
 
@@ -63,55 +74,58 @@ export const searchProperty = (req, res) => {
             .then(success => success)
             .catch(e => {throw new Error(e)});
             }
-        res(response.data).code(200);
+        res(response).code(200);
         })
         .catch(e => res(Boom.badRequest(e)))
 }
 
 export const searchByAddress = (req, res) => {
-    let url = `${API_CATASTRO}/property/address?province=${req.query.province}&municipality=${req.query.municipality}&type=${req.query.type}&street=${req.query.street}&number=${req.query.number}`;
+    const { query } = req;
+    const { province, municipality, street, type, number } = query;
+
+    const url = `${API_CATASTRO}/property/address?province=${province}&municipality=${municipality}&type=${type}&street=${street}&number=${number}`
     request({
         uri: url,
-    json: true
-})
-.then(response => {
-    res(response).code(200);
-})
-.catch(e => res(Boom.badRequest(e)))
+        json: true
+    })
+    .then(response => {
+        res(response).code(200);
+    })
+    .catch(e => res(Boom.badRequest(e)))
 }
 
 export const searchMunicipalities = (req, res) => {
     let url = `${API_CATASTRO}/municipalities/${req.params.name}`
     request({
         uri: url,
-    json: true
-})
-.then(response => {
-    res(response).code(200);
-})
-.catch(e => res(Boom.badRequest(e)))
+        json: true
+    })
+    .then(response => {
+        res(response).code(200);
+    })
+    .catch(e => res(Boom.badRequest(e)))
 }
 
 export const searchProvinces = (req, res) => {
     let url = `${API_CATASTRO}/provinces`
     request({
         uri: url,
-    json: true
-})
-.then(response => {
-    res(response).code(200);
-})
-.catch(e => res(Boom.badRequest(e)))
+        json: true
+    })
+    .then(response => {
+        res(response).code(200);
+    })
+    .catch(e => res(Boom.badRequest(e)))
 }
 
 export const searchVias = (req, res) => {
     let url = `${API_CATASTRO}/vias/${req.params.province}/${req.params.municipality}`
     request({
         uri: url,
-    json: true
-})
-.then(response => {
-    res(response).code(200);
-})
-.catch(e => res(Boom.badRequest(e)))
+        json: true
+    })
+    .then(response => {
+        res(response).code(200);
+    })
+    .catch(e => res(Boom.badRequest(e)))
 }

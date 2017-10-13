@@ -19,9 +19,24 @@ export const findPlan = (req, res) => {
 };
 
 export const findAllPlans = (req, res) => {
+    let size = parseInt(req.query.size) || 15,
+    page= parseInt(req.query.page) || 1,
+    offset = size * (page - 1);
     return Plan
-        .findAll({offset: req.query.page, limit: req.query.size || 20})
-        .then(plans => res({data: plans}).code(200))
+        .findAndCountAll({offset: req.query.page, limit: req.query.size || 20})
+        .then(plans => { 
+            let pages = Math.ceil(plans.count / size);
+            res({
+                data: plans.rows, 
+                meta: {
+                    total: plans.count, 
+                    pages: pages,
+                    items: size,
+                    page: offset+1      
+                }
+            })
+            .code(200)
+        })
         .catch((error) => res(Boom.badRequest(error)));
 };
 

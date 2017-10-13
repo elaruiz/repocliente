@@ -33,7 +33,7 @@ export const paypalCharge = (data) => {
         };
 
     const promise = new Promise((resolve, reject) => {
-        setTimeout(() => paypal.payment.create(create_payment_json, function (error, payment) {
+        setTimeout(() => paypal.payment.create(create_payment_json,  (error, payment) => {
             if (error) {
                 reject(new Error(error));
             } else {
@@ -70,5 +70,17 @@ export const paypalExecutePayment = (req) => {
     return promise;
 };
 
-
-
+export const paypalPaymentDetails = (id) => {
+    return new Promise((resolve,reject) => {
+        paypal.payment.get(id, (error, payment) => {
+            if(error){
+                reject(error);
+            }else{
+                resolve({
+                    data: payment,
+                    type: 'paypal'
+                });
+            }
+        })
+    })
+};

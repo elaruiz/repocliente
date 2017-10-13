@@ -70,5 +70,17 @@ export const paypalExecutePayment = (req) => {
     return promise;
 };
 
-
-
+export const paypalPaymentDetails = (id) => {
+    return new Promise((resolve,reject) => {
+        paypal.payment.get(id, (error, payment) => {
+            if(error){
+                reject(error);
+            }else{
+                resolve({
+                    data: payment,
+                    type: 'paypal'
+                });
+            }
+        })
+    })
+};

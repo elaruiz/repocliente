@@ -1,11 +1,15 @@
-
 import {
-    findAllBalances, findUserBalance,
-    paymentExecuteMembershipPaypal, paymentExecutePaypal,
-    paymentMembershipPaypal, paymentMembershipStripe
+    findAllBalances,
+    findUserBalance,
+    getPaymentDetails,
+    getPaypalPaymentDetails,
+    paymentExecuteMembershipPaypal,
+    paymentExecutePaypal,
+    paymentMembershipPaypal,
+    paymentMembershipStripe
 } from "../controllers/TransactionController";
-import {findUserMembership} from "../controllers/MembershipController";
-import {findPlan} from "../controllers/PlanController";
+import { findUserMembership } from "../controllers/MembershipController";
+import { findPlan } from "../controllers/PlanController";
 
 const payMembershipPaypalRoute ={
     method: 'POST',
@@ -102,6 +106,17 @@ const invoicesUserRoute = {
     }
 };
 
+const paymentDetailsRoute = {
+    method: 'GET',
+    path: '/api/invoice/{id}/info',
+    config: {
+        auth: {
+            strategy: 'jwt'
+        },
+        handler: getPaymentDetails
+    }
+};
+
 export default [
     payMembershipPaypalRoute,
     payExecuteMembershipPaypalRoute,
@@ -110,5 +125,6 @@ export default [
     invoicesUserRoute,
     paypalRoute,
     invoiceByUserRoute,
-    invoiceByPlanRoute
+    invoiceByPlanRoute,
+    paymentDetailsRoute
 ];

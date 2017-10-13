@@ -132,32 +132,29 @@ const searchBalances = (req, res) => {
 
 export const findUserBalance = (req, res) => {
     let q = _.omit(req.query, ['start', 'end', 'size', 'page']);
-    let size = parseInt(req.query.size) || 15,
-    page= parseInt(req.query.page) || 1,
-    offset = size * (page - 1);
     return Transaction
         .findAndCountAll({
-            offset: offset, 
+            offset: offset,
             limit: size,
             order: [['created_at', 'DESC']],
-            where: (req.query.start && req.query.end)? 
+            where: (req.query.start && req.query.end)?
             Object.assign({created_at: {[Op.between]: [req.query.start, req.query.end]}}, q) : q,
             include: [{
                 model : Membership,
                 where: {user_id: req.auth.credentials.id },
                 include: {model:Plan, attributes: ['id', 'name']},
                 attributes: ['id'] }],
-            attributes: ['id', 'paid_date', 'total', 'currency', 'payment_method', 'transaction_id']  
+            attributes: ['id', 'paid_date', 'total', 'currency', 'payment_method', 'transaction_id']
         })
-        .then(transactions => { 
+        .then(transactions => {
             let pages = Math.ceil(transactions.count / size);
             res({
-                data: transactions.rows, 
+                data: transactions.rows,
                 meta: {
-                    total: transactions.count, 
+                    total: transactions.count,
                     pages: pages,
                     items: size,
-                    page: offset+1      
+                    page: offset+1
                 }
             }).code(200)
         })
@@ -171,40 +168,57 @@ export const findAllBalances = (req, res) => {
     offset = size * (page - 1);
     return Transaction
         .findAndCountAll({
-            offset: offset, 
+            offset: offset,
             limit: size,
             order: [['created_at', 'DESC']],
             where: (req.query.start && req.query.end)? Object.assign({created_at: {[Op.between]: [req.query.start, req.query.end]}}, q) : q,
-            include: [{ 
+            include: [{
                 model : Membership,
-                paranoid: false, 
-                where:  (req.params.userId) ? {user_id :req.params.userId} : 
-                (req.params.planId) ? {plan_id:req.params.planId} : 
+                paranoid: false,
+                where:  (req.params.userId) ? {user_id :req.params.userId} :
+                (req.params.planId) ? {plan_id:req.params.planId} :
                 {},
                 include: [
-                    {model:Plan, 
+                    {model:Plan,
                         attributes: ['id', 'name']
-                    }, 
+                    },
                     {
                         model:User,
-                        paranoid: false, 
+                        paranoid: false,
                         attributes: ['id', 'name']
                     }
                 ],
                 attributes: ['id'] }],
             attributes: ['id', 'paid_date', 'total', 'currency', 'payment_method','transaction_id']
         })
-        .then(transactions => { 
+        .then(transactions => {
             let pages = Math.ceil(transactions.count / size);
             res({
-                data: transactions.rows, 
+                data: transactions.rows,
                 meta: {
-                    total: transactions.count, 
+                    total: transactions.count,
                     pages: pages,
                     items: size,
-                    page: offset+1      
+                    page: offset+1
                 }
             }).code(200)
         })
         .catch((error) => res(Boom.badRequest(error)));
+};
+
+export const getPaymentDetails = (req, res) => {
+    const { id } = req.params;
+    Transaction
+        .findOne({
+            where: { id }
+        })
+        .then(t =>  {
+            if(t.payment_method === 'paypal') {
+                return paypalPaymentDetails(t.transaction_id);
+            }else if(t.payment_method === 'stripe'){
+                return stripePaymentDetails(t.transaction_id);
+            }
+        })
+        .then(data => res(data).code(200))
+        .catch(err => Boom.badRequest(err));
 };

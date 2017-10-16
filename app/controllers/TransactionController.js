@@ -4,8 +4,8 @@ import Boom from 'boom';
 import {createMembership, updateMembershipEndDate} from "./MembershipController";
 import Models from '../models';
 import moment from 'moment';
-import {stripeCharge} from "../util/stripeFunctions";
-import {paypalCharge, paypalExecutePayment} from "../util/paypalFunctions";
+import { stripeCharge, stripePaymentDetails } from "../util/stripeFunctions";
+import { paypalCharge, paypalExecutePayment, paypalPaymentDetails } from "../util/paypalFunctions";
 import _ from "lodash";
 
 const Transaction = Models.transaction;

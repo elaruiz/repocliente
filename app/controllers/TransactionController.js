@@ -138,7 +138,7 @@ export const findUserBalance = (req, res) => {
             limit: size,
             order: [['created_at', 'DESC']],
             where: (req.query.start && req.query.end)?
-            Object.assign({created_at: {[Op.between]: [req.query.start, req.query.end]}}, q) : q,
+                {...q, created_at: {[Op.between]: [req.query.start, req.query.end]}} : q,
             include: [{
                 model : Membership,
                 where: {user_id: req.auth.credentials.id },

@@ -7,6 +7,7 @@ import transactionsRoute from "./TransactionsRoute";
 import reportsRoute from "./ReportsRoute";
 import statusRoute from './StatusRoute';
 import configurationRoute from './ConfigurationRoute';
+import adminReportRoute from './AdminReportsRoute';
 
 export default [
     ...messagesRoute,
@@ -17,6 +18,7 @@ export default [
     ...transactionsRoute,
     ...reportsRoute,
     ...statusRoute,
-    ...configurationRoute
+    ...configurationRoute,
+    ...adminReportRoute
 ];
 

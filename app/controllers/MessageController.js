@@ -1,4 +1,4 @@
-'use strict'
+'use strict';
 
 import Boom from 'boom';
 // const Message = require('../models').message;

@@ -1,13 +1,14 @@
+import {
+    createReport,
+    findUserReport,
+    findUserReports,
+    checkUserReports,
+    remainingReports,
+    generateUserReport
+} from "../controllers/ReportController";
 
-import {createReport, 
-    findUserReport, 
-    findUserReports, 
-    checkUserReports, 
-    remainingReports, 
-    generateUserReport} from "../controllers/ReportController";
 
-
-    const createReportRoute =  {
+const createReportRoute = {
     method: 'POST',
     path: '/api/reports',
     config: {
@@ -49,7 +50,7 @@ const generateReportRoute = {
         },
         pre: [{ method: checkUserReports, assign: 'reports' }],
         handler: remainingReports
-        
+
     }
 };
 
@@ -61,7 +62,7 @@ const getReportRoute = {
             strategy: 'jwt',
         },
         pre: [{ method: checkUserReports, assign: 'reports' }],
-        handler: generateUserReport  
+        handler: generateUserReport
     }
 };
 

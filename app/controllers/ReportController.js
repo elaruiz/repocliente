@@ -39,15 +39,19 @@ export const findUserReports = (req, res) => {
 export const findUserReport = (req, res) => {
     return Report
         .findOne({ where: { user_id: req.auth.credentials.id, id: req.params.id } })
-        .then(report => res({ data: report }).code(200))
+        .then(report => res.file(report.dataValues.link))
         .catch((error) => res(Boom.badRequest(error)));
 };
 
-export const createReport = (req, res) => {
+export const createReport = (req, file) => {
     return Report
-        .create(req.payload)
-        .then(report => res({ data: report }).code(201))
-        .catch(error => Boom.badRequest(error));
+        .create({
+            user_id : req.auth.credentials.id,
+            reference : req.params.reference,
+            link : file
+        })
+        .then(report => report)
+        .catch(error => { throw new Error(error)});
 };
 
 export const checkUserReports = async (req, res) => {
@@ -64,7 +68,7 @@ export const checkUserReports = async (req, res) => {
     }
 };
 
-export const remainingReports = async (req, res) => {
+export const remainingReports = async (req) => {
     try {
         let response = await Membership
             .findOne({
@@ -73,27 +77,30 @@ export const remainingReports = async (req, res) => {
                     remaining_reports: { [Op.gt]: 0 }
                 },
                 order: [['end_date', 'ASC']]
-            })
-        let reports = await response
+            });
+        return await response
             .update({ remaining_reports: response.dataValues.remaining_reports - 1 });
-        res(reports)
     }
     catch (err) {
-        res(Boom.badRequest(err))
+        throw new Error(error);
     }
 };
 
 export const generateUserReport = (req, res) => {
     const now = moment(), date = now.clone();
     const reference = req.params.reference;
-    const filename = `./public/report_${date}_${reference}.pdf`;
+    const filename = `./public/report_${date}_${reference}_user_${req.auth.credentials.id}.pdf`;
 
     request(`${API_PROCESSOR}/property/process/${reference}/pdf`)
         .on('error', (err) => {
-            res(Boom.badImplementation());
+            res(Boom.badImplementation(err));
         })
         .pipe(fs.createWriteStream(filename))
         .on('finish', () => {
-            res.file(filename);
-        })
+            Promise.all([createReport(req, filename), remainingReports(req)])
+                .then(values =>
+                    res.file(filename))
+                .catch(error => res(Boom.badRequest(error)))
+        }
+        )
 };

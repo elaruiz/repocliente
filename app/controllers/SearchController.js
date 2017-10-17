@@ -9,17 +9,23 @@ const User = Models.user;
 const Sequelize = Models.Sequelize;
 
 export const findUserSearches = (req, res) => {
-    let size = parseInt(req.query.size) || 15,
+    let size = parseInt(req.query.size) || 5,
     page= parseInt(req.query.page) || 1,
     offset = size * (page - 1);
     return Search
-        .findAndCountAll({ where: { user_id: req.auth.credentials.id }, offset: offset, limit: size })
-        .then(searches => { 
+        .findAndCountAll({
+            where: {
+                user_id: req.auth.credentials.id
+            },
+            offset: offset,
+            limit: size,
+            order: [['updated_at', 'DESC']] })
+        .then(searches => {
             let pages = Math.ceil(searches.count / size);
             res({
-                data: searches.rows, 
+                data: searches.rows,
                 meta: {
-                    total: searches.count, 
+                    total: searches.count,
                     pages: pages,
                     items: size,
                     page: offset+1      
@@ -45,13 +51,31 @@ export const findMostWanted = async (req, res) => {
 
 export const createSearch = async (property, id) => {
     try {
-    return await Search.create({
-        address: property.address, 
-        reference: property.reference, 
-        user_id: id});
-    } catch (error) {
+        let [instance, wasCreated] = await Search.findCreateFind({
+            where: {
+                address: property.address,
+                reference: property.reference,
+                user_id: id
+            }
+        });
+        if (wasCreated === false) {
+           let search = await Search.findOne({
+                where: {
+                    address: property.address,
+                    reference: property.reference,
+                    user_id: id
+                }
+            });
+           search.changed('updated_at', true);
+           return await search.save()
+        }
+        return instance;
+
+    }
+    catch (error) {
         throw new Error(error)
     }
+
 };
 
 export const deleteSearches = (req, res) => {

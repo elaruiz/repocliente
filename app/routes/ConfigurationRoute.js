@@ -66,7 +66,7 @@ const deleteConfigurationRoute = {
 
 const getConfigurationByName = {
     method: 'GET',
-    path: '/api/config/{name}/value',
+    path: '/api/config/{names}/value',
     config: {
         auth: false,
         handler: findConfigurationByName,

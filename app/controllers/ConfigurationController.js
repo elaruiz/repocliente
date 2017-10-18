@@ -1,13 +1,16 @@
 import Boom from 'boom';
 import Models from '../models/';
 
+const Op = Models.Sequelize.Op;
 const Configuration = Models.configuration;
 
 export const verifyUniqueConf = (req, res) => {
     return Configuration
         .findOne({
             where: {
-                name: req.payload.name
+                name: {
+                    [Op.eq]: req.payload.name
+                }
             }
         })
         .then(conf => {
@@ -55,7 +58,11 @@ export const getConfiguration = (req, res) => {
 
     return Configuration
         .findOne({
-            where: { id }
+            where: {
+                id: {
+                    [Op.eq]: id
+                }
+            }
         })
         .then(config => {
             if (!config) {
@@ -83,19 +90,30 @@ export const updateConfiguration = (req, res) => {
 export const deleteConfiguration = (req, res) => {
     return Configuration
         .destroy({
-            where: { id: req.params.id }
+            where: {
+                id: {
+                    [Op.eq]: req.params.id
+                }
+            }
         })
         .then(success => res().code(204))
         .catch(error => res(Boom.badRequest(error)));
 };
 
 export const findConfigurationByName = (req, res) => {
+    let names = req.params.names.split(",").map(v => v.trim());
     return Configuration
-        .findOne({ where: { name: req.params.name } })
-        .then(config => {
-            if(config !== null) {
-                res(config.value).code(200)
-            }else{
+        .findAll({
+            where: {
+                name: {
+                    [Op.in]: names
+                }
+            }
+        })
+        .then(configs => {
+            if (configs !== null) {
+                res({ data: configs }).code(200)
+            } else {
                 res(Boom.notFound('Variable not found'));
             }
         })

@@ -16,7 +16,7 @@ const createPlanRoute = {
         // Validate the payload against the Joi schema
         validate: {
             payload: createPlanSchema,
-            failAction: (req,res,source, error) => res(ErrorMsg(req,res,source, error))
+            failAction: (req,res,source, error) => res(ErrorMsg(error))
         }
     }
 };
@@ -64,7 +64,7 @@ const updatePlanRoute = {
         // Validate the payload against the Joi schema
         validate: {
             payload: updatePlanSchema,
-            failAction: (req,res,source, error) => res(ErrorMsg(req,res,source, error))
+            failAction: (req,res,source, error) => res(ErrorMsg(error))
         }
     }
 };

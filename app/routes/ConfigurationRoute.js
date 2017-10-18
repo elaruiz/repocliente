@@ -1,7 +1,9 @@
 import {
-    createConfiguration, deleteConfiguration, getAllConfigurations,
-    getConfiguration, updateConfiguration
+    createConfiguration, deleteConfiguration, findConfigurationByName, getAllConfigurations,
+    getConfiguration, updateConfiguration, verifyUniqueConf
 } from "../controllers/ConfigurationController";
+import { createOrEditConfSchema } from "../schemas/ConfigurationSchema";
+import { ErrorMsg } from "../util/responses";
 
 const auth = {
     scope: ['admin'],
@@ -22,7 +24,12 @@ const createConfigurationRoute = {
     path: '/api/configs',
     config: {
         auth,
-        handler: createConfiguration
+        pre: [{ method: verifyUniqueConf }],
+        handler: createConfiguration,
+        validate: {
+            payload: createOrEditConfSchema,
+            failAction: (req, res, source, error) => res(ErrorMsg(error))
+        }
     }
 };
 
@@ -40,7 +47,11 @@ const updaConfigurationRoute = {
     path: '/api/config/{id}',
     config: {
         auth,
-        handler: updateConfiguration
+        handler: updateConfiguration,
+        validate: {
+            payload: createOrEditConfSchema,
+            failAction: (req, res, source, error) => res(ErrorMsg(error))
+        }
     }
 };
 
@@ -53,10 +64,20 @@ const deleteConfigurationRoute = {
     }
 };
 
+const getConfigurationByName = {
+    method: 'GET',
+    path: '/api/config/{name}/value',
+    config: {
+        auth: false,
+        handler: findConfigurationByName,
+    }
+};
+
 export default [
     listAllConfigurationRoute,
     getConfigurationRoute,
     createConfigurationRoute,
     updaConfigurationRoute,
-    deleteConfigurationRoute
+    deleteConfigurationRoute,
+    getConfigurationByName
 ];

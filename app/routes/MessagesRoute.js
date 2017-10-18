@@ -51,7 +51,7 @@ const sendMessageRoute= {
         // Validate the payload against the Joi schema
         validate: {
             payload: MessageSchema,
-            failAction: (req,res,source, error) => res(ErrorMsg(req,res,source, error))
+            failAction: (req,res,source, error) => res(ErrorMsg(error))
         }
     }
 };

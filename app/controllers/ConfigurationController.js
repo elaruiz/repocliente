@@ -3,6 +3,28 @@ import Models from '../models/';
 
 const Configuration = Models.configuration;
 
+export const verifyUniqueConf = (req, res) => {
+    return Configuration
+        .findOne({
+            where: {
+                name: req.payload.name
+            }
+        })
+        .then(conf => {
+            if (conf) {
+                let error = Boom.badRequest('Ya existe esa variable');
+
+                error.reformat();
+                error.output.payload['validation'] = {
+                    keys: ["name"]
+                };
+
+                return res(error);
+            }
+            res(req.payload);
+        });
+};
+
 export const getAllConfigurations = async (req, res) => {
     let itemsPerPage = req.query.size || 20;
     let page = req.query.page || 1;
@@ -46,7 +68,7 @@ export const getConfiguration = (req, res) => {
 
 export const createConfiguration = (req, res) => {
     const { name, type, value } = req.payload;
-    Configuration.create({ name, type, value })
+    Configuration.create({ name: `${name.toUpperCase()}`, type, value: `${value}` })
         .then(config => res({ data: config }).code(201))
         .catch(err => Boom.badRequest(err));
 };
@@ -65,4 +87,17 @@ export const deleteConfiguration = (req, res) => {
         })
         .then(success => res().code(204))
         .catch(error => res(Boom.badRequest(error)));
+};
+
+export const findConfigurationByName = (req, res) => {
+    return Configuration
+        .findOne({ where: { name: req.params.name } })
+        .then(config => {
+            if(config !== null) {
+                res(config.value).code(200)
+            }else{
+                res(Boom.notFound('Variable not found'));
+            }
+        })
+        .catch(error => res(Boom.badRequest(error)))
 };

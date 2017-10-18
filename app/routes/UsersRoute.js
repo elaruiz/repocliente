@@ -40,7 +40,7 @@ const loginUserRoute = {
         },
       validate: {
             payload: authenticateUserSchema,
-            failAction: (req,res,source, error) => res(ErrorMsg(req,res,source, error))
+            failAction: (req,res,source, error) => res(ErrorMsg(error))
         }
     }
 };
@@ -66,7 +66,7 @@ const signupUserRoute = {
         // Validate the payload against the Joi schema
         validate: {
             payload: createUserSchema,
-            failAction: (req,res,source, error) => res(ErrorMsg(req,res,source, error))
+            failAction: (req,res,source, error) => res(ErrorMsg(error))
         }
     }
 };
@@ -79,7 +79,7 @@ const updateUserRoute ={
         handler: updateUser,
         validate: {
             payload: payloadSchema,
-            failAction: (req,res,source, error) => res(ErrorMsg(req,res,source, error))
+            failAction: (req,res,source, error) => res(ErrorMsg(error))
         },
         auth: {
             strategy: 'jwt'
@@ -137,7 +137,7 @@ const updateUserIdRoute ={
         handler: updateUser,
         validate: {
             payload: payloadSchema,
-            failAction: (req,res,source, error) => res(ErrorMsg(req,res,source, error))
+            failAction: (req,res,source, error) => res(ErrorMsg(error))
         },
         
     }

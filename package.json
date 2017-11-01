@@ -16,6 +16,7 @@
     "handlebars": "^4.0.10",
     "hapi": "^16.6.2",
     "hapi-auth-jwt": "^4.0.0",
+    "hapi-auth-jwt2": "^7.3.0",
     "hapi-cors": "^1.0.1",
     "hoek": "^4.2.0",
     "inert": "^4.2.1",

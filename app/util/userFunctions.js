@@ -1,13 +1,14 @@
 'use strict';
 
 import bcrypt from 'bcryptjs';
-import {EMAIL_PASSWORD, EMAIL_USER, EMAIL_SERVICE} from "../constants/index"
-import {host} from "../server";
+import {EMAIL_PASSWORD, EMAIL_USER, EMAIL_HOST, EMAIL_PORT, CLIENTE_WEB, EMAIL_ACCOUNT} from "../constants/index"
+import moment from 'moment';
 import nodemailer from 'nodemailer';
 import hbs from 'nodemailer-express-handlebars';
 
 const smtpTransport = nodemailer.createTransport({
-    service: EMAIL_SERVICE,
+    host: EMAIL_HOST,
+    port: EMAIL_PORT,
     auth: {
         user: EMAIL_USER,
         pass: EMAIL_PASSWORD
@@ -41,50 +42,66 @@ export const comparePasswords = (password, userPassword, cb) => {
 export const sendMail= (token, user) => {
     const data = {
         to: user.email,
-        from: EMAIL_USER,
+        from: "elaruiz95@gmail.com",
         template: 'forgot-password-email',
         subject: 'Password help has arrived!',
         context: {
-            url: `${host}/api/users/reset_password?token=${token}`,
+            url: `${CLIENTE_WEB}/reset_password?token=${token}`,
             name: user.name
         }
     };
-
-    smtpTransport.sendMail(data);
+    smtpTransport.sendMail(data, ((err, info) => {
+        if(err) {
+            console.log('Ocurrio un error')
+        }
+    }));
 };
 
-
-export const sendMailReminder = (users) => {
-    for (let i = 0, len = users.length; i < len; i++) {
-    const data = {
-        to: users[i].email,
-        from: EMAIL_USER,
-        template: 'renewal-reminder',
-        subject: 'Renewal Reminder',
-        context: {
-            user: users[i].name
-        }
-    };
-    // send mail with defined transport object
-    smtpTransport.sendMail(data, (error, info) => {
-        if (error) {
-            console.log(error);
-        }
-        console.log('Message sent: %s', info.messageId);
-    });
-}
-};
-
-export const sendMailInvoice= (user, transaction) => {
+export const sendMailInvoice2 = (user, transaction, plan) => {
+    let fecha =  moment(transaction.created_at).format('DD-MM-YYYY');
     const data = {
         to: user.email,
-        from: EMAIL_USER,
-        template: 'invoice',
-        subject: 'Invoice',
+        from: EMAIL_ACCOUNT,
+        template: 'receipt',
+        subject: 'Comprobante de pago',
         context: {
-            name: user.name
+            user: user,
+            date: fecha,
+            plan:plan,
+            transaction: transaction
         }
     };
     smtpTransport.sendMail(data);
+};
+
+export const sendMailInvoice = (user, transaction, plan) => {
+    return new Promise((resolve,reject) => {
+        if(EMAIL_HOST) {
+            let fecha = moment(transaction.created_at).format('DD-MM-YYYY');
+            const data = {
+                to: user.email,
+                from: EMAIL_ACCOUNT,
+                template: 'receipt',
+                subject: 'Comprobante de pago',
+                context: {
+                    user: user,
+                    date: fecha,
+                    plan: plan,
+                    transaction: transaction
+                }
+            };
+            smtpTransport.sendMail(data, ((err, info) => {
+                if (err) {
+                    reject(err)
+                }
+                else {
+                    resolve(info)
+                }
+            }));
+        }
+        else {
+            resolve();
+        }
+    })
 };
 

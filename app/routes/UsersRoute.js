@@ -72,7 +72,7 @@ const signupUserRoute = {
 };
 
 const updateUserRoute ={
-    method: ['PATCH', 'PUT'],
+    method: ['PUT'],
     path: '/api/users',
     config: {
         pre: [{ method: findUser,  assign: 'user' }],

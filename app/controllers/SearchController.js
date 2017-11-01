@@ -5,7 +5,6 @@ import Models from '../models';
 import { API_PROCESSOR, API_CATASTRO } from "../constants"
 import request from 'request-promise';
 const Search = Models.search;
-const User = Models.user;
 const Sequelize = Models.Sequelize;
 
 export const findUserSearches = (req, res) => {
@@ -15,7 +14,7 @@ export const findUserSearches = (req, res) => {
     return Search
         .findAndCountAll({
             where: {
-                user_id: req.auth.credentials.id
+                user_id: (req.params.userId) ? req.params.userId : req.auth.credentials.id
             },
             offset: offset,
             limit: size,
@@ -28,7 +27,7 @@ export const findUserSearches = (req, res) => {
                     total: searches.count,
                     pages: pages,
                     items: size,
-                    page: offset+1      
+                    page: page
                 }
             })
             .code(200)
@@ -42,20 +41,20 @@ export const findMostWanted = async (req, res) => {
             group: ['reference', 'url', 'address'],
             attributes: ['reference', Sequelize.fn('count', Sequelize.col('reference')), 'url', 'address'],
             order: [['count', 'DESC']],
-            offset: req.query.page, 
-            limit: req.query.size || 10
+            limit: parseInt(req.query.size)  || 10
         })
         .then(search => { res({data: search}).code(200) })
         .catch((error) => res(Boom.badRequest(error)));
 };
 
-export const createSearch = async (property, id) => {
+export const createSearch = async (property, req) => {
     try {
         let [instance, wasCreated] = await Search.findCreateFind({
             where: {
                 address: property.address,
                 reference: property.reference,
-                user_id: id
+                url: `${req.params.provincia}/${req.params.municipio}/${req.params.referencia}`,
+                user_id: req.auth.credentials.id
             }
         });
         if (wasCreated === false) {
@@ -63,7 +62,8 @@ export const createSearch = async (property, id) => {
                 where: {
                     address: property.address,
                     reference: property.reference,
-                    user_id: id
+                    url: `${req.params.provincia}/${req.params.municipio}/${req.params.referencia}`,
+                    user_id: req.auth.credentials.id
                 }
             });
            search.changed('updated_at', true);
@@ -88,26 +88,27 @@ export const deleteSearches = (req, res) => {
 };
 
 export const searchProperty = (req, res) => {
+    const { params } = req;
     request({
-        uri: `${API_PROCESSOR}/property/process/${req.params.referencia}`,
+        uri: `${API_PROCESSOR}/property/process/${params.provincia}/${params.municipio}/${params.referencia}`,
         json: true
     })
     .then(response => {
         if (req.auth.credentials) {
-            createSearch(response.data, req.auth.credentials.id)
+            createSearch(response.data, req)
             .then(success => success)
             .catch(e => {throw new Error(e)});
             }
         res(response).code(200);
         })
         .catch(e => res(Boom.badRequest(e)))
-}
+};
 
 export const searchByAddress = (req, res) => {
     const { query } = req;
     const { province, municipality, street, type, number } = query;
 
-    const url = `${API_CATASTRO}/property/address?province=${province}&municipality=${municipality}&type=${type}&street=${street}&number=${number}`
+    const url = `${API_CATASTRO}/property/address?province=${province}&municipality=${municipality}&type=${type}&street=${street}&number=${number}`;
     request({
         uri: url,
         json: true
@@ -116,7 +117,7 @@ export const searchByAddress = (req, res) => {
         res(response).code(200);
     })
     .catch(e => res(Boom.badRequest(e)))
-}
+};
 
 export const searchMunicipalities = (req, res) => {
     let url = `${API_CATASTRO}/municipalities/${req.params.name}`
@@ -128,7 +129,7 @@ export const searchMunicipalities = (req, res) => {
         res(response).code(200);
     })
     .catch(e => res(Boom.badRequest(e)))
-}
+};
 
 export const searchProvinces = (req, res) => {
     let url = `${API_CATASTRO}/provinces`
@@ -140,10 +141,10 @@ export const searchProvinces = (req, res) => {
         res(response).code(200);
     })
     .catch(e => res(Boom.badRequest(e)))
-}
+};
 
 export const searchVias = (req, res) => {
-    let url = `${API_CATASTRO}/vias/${req.params.province}/${req.params.municipality}`
+    let url = `${API_CATASTRO}/vias/${req.params.province}/${req.params.municipality}`;
     request({
         uri: url,
         json: true
@@ -152,4 +153,4 @@ export const searchVias = (req, res) => {
         res(response).code(200);
     })
     .catch(e => res(Boom.badRequest(e)))
-}
+};

@@ -1,7 +1,7 @@
 import {
-    createSearch, deleteSearches, 
+    deleteSearches,
     findMostWanted, findUserSearches, 
-    earchProperty, searchByAddress,
+    searchByAddress,
     searchMunicipalities, searchProperty,
     searchProvinces, searchVias
 } from "../controllers/SearchController";
@@ -17,7 +17,20 @@ const deleteSearchesRoute = {
         handler: deleteSearches,
     }
 };
+
 const readUserSearchesRoute = {
+    method: 'GET',
+    path: '/api/user/{userId}/searches',
+    config: {
+        auth: {
+            strategy: 'jwt',
+            scope: ['admin']
+        },
+        handler: findUserSearches,
+    }
+};
+
+const readSearchesRoute = {
     method: 'GET',
     path: '/api/searches',
     config: {
@@ -42,7 +55,7 @@ const readAllSearchesRoute = {
 
 const searchPropertyRoute = {
     method: 'GET',
-    path: '/api/search/property/{referencia}',
+    path: '/api/search/property/{provincia}/{municipio}/{referencia}',
     config: {
         auth: {
             strategy: 'jwt',
@@ -103,6 +116,7 @@ const searchViasRoute = {
 export default [
     readUserSearchesRoute,
     deleteSearchesRoute,
+    readSearchesRoute,
     readAllSearchesRoute,
     searchPropertyRoute,
     searchByAddresRoute,

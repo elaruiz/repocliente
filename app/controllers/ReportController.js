@@ -8,17 +8,27 @@ import fs from 'fs';
 import moment from 'moment';
 
 const Report = Models.report;
-const User = Models.user;
 const Membership = Models.membership;
 const Sequelize = Models.Sequelize;
 const Op = Sequelize.Op;
 
 export const findUserReports = (req, res) => {
     let size = parseInt(req.query.size) || 15,
-        page = parseInt(req.query.page) || 1,
+        page= parseInt(req.query.page) || 1,
         offset = size * (page - 1);
     return Report
-        .findAndCountAll({ where: { user_id: req.auth.credentials.id }, offset: offset, limit: size })
+        .findAndCountAll({
+            offset: offset,
+            limit: size,
+            order: [['created_at', 'DESC']],
+            where: (req.query.start && req.query.end) ?
+                {
+                    created_at: {
+                        [Op.between]: [`${req.query.start} 00:00:00`, `${req.query.end} 23:59:59`]
+                    },
+                    user_id: req.auth.credentials.id
+                } : {user_id: req.auth.credentials.id}
+        })
         .then(reports => {
             let pages = Math.ceil(reports.count / size);
             res({
@@ -27,14 +37,12 @@ export const findUserReports = (req, res) => {
                     total: reports.count,
                     pages: pages,
                     items: size,
-                    page: offset + 1
+                    page: page
                 }
-            })
-                .code(200)
+            }).code(200)
         })
         .catch((error) => res(Boom.badRequest(error)));
 };
-
 
 export const findUserReport = (req, res) => {
     return Report
@@ -43,15 +51,17 @@ export const findUserReport = (req, res) => {
         .catch((error) => res(Boom.badRequest(error)));
 };
 
-export const createReport = (req, file) => {
+export const createReport = async (req, file) => {
     return Report
         .create({
-            user_id : req.auth.credentials.id,
-            reference : req.params.reference,
-            link : file
+            user_id: req.auth.credentials.id,
+            reference: req.params.reference,
+            link: file
         })
         .then(report => report)
-        .catch(error => { throw new Error(error)});
+        .catch(error => {
+            throw new Error(error)
+        });
 };
 
 export const checkUserReports = async (req, res) => {
@@ -59,11 +69,15 @@ export const checkUserReports = async (req, res) => {
         let response = await Membership
             .sum('remaining_reports', {
                 where: {
-                    user_id: req.auth.credentials.id
+                    user_id: req.auth.credentials.id,
+                    end_date: {[Op.gte]: moment().format('YYYY-MM-DD') }
                 }
             });
+
         (response <= 0 || isNaN(response)) ? res(Boom.forbidden(`Can't generate report`)) : res(response)
-    }catch (err) {
+    }
+
+    catch (err) {
         res(Boom.badRequest(err))
     }
 };
@@ -74,9 +88,10 @@ export const remainingReports = async (req) => {
             .findOne({
                 where: {
                     user_id: req.auth.credentials.id,
-                    remaining_reports: { [Op.gt]: 0 }
+                    remaining_reports: { [Op.gt]: 0 },
+                    end_date: {[Op.gte]: moment().format('YYYY-MM-DD') }
                 },
-                order: [['end_date', 'ASC']]
+                order: [['end_date', 'ASC'], ['created_at', 'ASC']]
             });
         return await response
             .update({ remaining_reports: response.dataValues.remaining_reports - 1 });
@@ -89,18 +104,25 @@ export const remainingReports = async (req) => {
 export const generateUserReport = (req, res) => {
     const now = moment(), date = now.clone();
     const reference = req.params.reference;
+    const province = req.params.province;
+    const municipality = req.params.municipality;
     const filename = `./public/report_${date}_${reference}_user_${req.auth.credentials.id}.pdf`;
 
-    request(`${API_PROCESSOR}/property/process/${reference}/pdf`)
+    request.post(
+        {
+            url: `${API_PROCESSOR}/property/process/${province}/${municipality}/${reference}/pdf`,
+            json: true,
+            body: {
+                graphicBase64: req.payload.graphic
+            }
+        })
         .on('error', (err) => {
             res(Boom.badImplementation(err));
         })
         .pipe(fs.createWriteStream(filename))
         .on('finish', () => {
             Promise.all([createReport(req, filename), remainingReports(req)])
-                .then(values =>
-                    res.file(filename))
+                .then(values => res.file(filename))
                 .catch(error => res(Boom.badRequest(error)))
-        }
-        )
+        })
 };

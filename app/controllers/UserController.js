@@ -89,18 +89,16 @@ export const createUser = (req, res) => {
 export const findUser = (req, res) => {
     return User
         .findOne({
-            where: {
-                id: req.auth.credentials.id
-            },
+            where: {id :req.auth.credentials.id},
             attributes: {
-                exclude: ['password', 'created_at', 'updated_at', 'deleted_at', 'admin']
+                exclude: ['password']
             }
         })
         .then(user => {
             if (!user) {
                 return res(Boom.notFound('Not Found'));
             }
-            return res(user).code(200);
+            return res(user);
 
         })
         .catch((error) => res(Boom.badRequest(error)));
@@ -144,7 +142,7 @@ export const findAllUsers = (req, res) => {
                     total: users.count, 
                     pages: pages,
                     items: size,
-                    page: offset+1      
+                    page: page
                 }}).code(200)})
         .catch((error) => res(Boom.badRequest(error)));
 };
@@ -243,12 +241,7 @@ const findUsersSubAboutToExpire = async () => {
           }
     let users = await User.findAll({where:{id:{[Op.in]: ids}}})
     return users;
-
-} catch (e) {
-    console.log(e) }
-}
-/*
-schedule.scheduleJob(rule, async () => { 
-    let users = await findUsersSubAboutToExpire();
-    sendMailReminder(users);
-}); */
+    } catch (e) {
+        throw new Error(e);
+    }
+};

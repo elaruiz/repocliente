@@ -6,6 +6,7 @@ import {
     remainingReports,
     generateUserReport
 } from "../controllers/ReportController";
+import { generateGraphic } from "../controllers/GraphicController";
 
 
 const createReportRoute = {
@@ -50,13 +51,12 @@ const generateReportRoute = {
         },
         pre: [{ method: checkUserReports, assign: 'reports' }],
         handler: remainingReports
-
     }
 };
 
 const getReportRoute = {
-    method: 'GET',
-    path: '/api/reports/property/{reference}',
+    method: 'POST',
+    path: '/api/reports/property/{province}/{municipality}/{reference}',
     config: {
         auth: {
             strategy: 'jwt',
@@ -66,10 +66,20 @@ const getReportRoute = {
     }
 };
 
+const generateGraphicRoute = {
+    method: 'POST',
+    path: '/api/reports/graphic',
+    config: {
+        auth: false,
+        handler: generateGraphic
+    }
+};
+
 export default [
     createReportRoute,
     readUserReportsRoute,
     readUserReportRoute,
     generateReportRoute,
-    getReportRoute
+    getReportRoute,
+    generateGraphicRoute
 ];

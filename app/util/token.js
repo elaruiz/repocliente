@@ -13,7 +13,7 @@ export const createToken = (user) => {
   }
   // Sign the JWT
   return jwt.sign(
-    { id: user.id, name: user.name, scope: scopes },
+    { id: user.id, scope: scopes },
     secret,
     { algorithm: 'HS256', expiresIn: '4h' }
   );

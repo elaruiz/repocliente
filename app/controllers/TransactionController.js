@@ -5,6 +5,7 @@ import {createMembership, updateMembershipEndDate} from "./MembershipController"
 import Models from '../models';
 import moment from 'moment';
 import { stripeCharge, stripePaymentDetails } from "../util/stripeFunctions";
+import { sendMailInvoice } from "../util/userFunctions"
 import { paypalCharge, paypalExecutePayment, paypalPaymentDetails } from "../util/paypalFunctions";
 import _ from "lodash";
 
@@ -23,6 +24,8 @@ export const paymentStripe = async (req, res ) => {
         let charge = await stripeCharge(req, data);
         let membership = await createMembership(req);
         let transaction = await createTransactionStripe(charge, membership);
+        let user = await User.findById(req.auth.credentials.id);
+        await sendMailInvoice(user, transaction, data);
         res({data: membership}).code(201);
     } catch(e) {
         res(Boom.badRequest(e));
@@ -73,10 +76,13 @@ export const paymentPaypal = async (req, res) => {
 
 export const paymentExecutePaypal = async (req, res) => {
     try {
+        let data = Object.assign({}, req.pre.plan.data.dataValues);
         let payment = await paypalExecutePayment(req);
         if (payment.transactions[0].related_resources[0].sale.state === "completed") {
             let membership = await createMembership(req);
             let transaction = await createTransactionPaypal(payment, membership);
+            let user = await User.findById(req.auth.credentials.id);
+            await sendMailInvoice(user, transaction, data);
             res({data: membership}).code(201);
         }
     } catch (error) {
@@ -132,13 +138,16 @@ const searchBalances = (req, res) => {
 
 export const findUserBalance = (req, res) => {
     let q = _.omit(req.query, ['start', 'end', 'size', 'page']);
+    let size = parseInt(req.query.size) || 15,
+        page= parseInt(req.query.page) || 1,
+        offset = size * (page - 1);
     return Transaction
         .findAndCountAll({
             offset: offset,
             limit: size,
             order: [['created_at', 'DESC']],
             where: (req.query.start && req.query.end)?
-                {...q, created_at: {[Op.between]: [req.query.start, req.query.end]}} : q,
+                {...q, created_at: { [Op.between]: [`${req.query.start} 00:00:00`, `${req.query.end} 23:59:59`]}} : q,
             include: [{
                 model : Membership,
                 where: {user_id: req.auth.credentials.id },
@@ -154,7 +163,7 @@ export const findUserBalance = (req, res) => {
                     total: transactions.count,
                     pages: pages,
                     items: size,
-                    page: offset+1
+                    page: page
                 }
             }).code(200)
         })
@@ -171,7 +180,12 @@ export const findAllBalances = (req, res) => {
             offset: offset,
             limit: size,
             order: [['created_at', 'DESC']],
-            where: (req.query.start && req.query.end)? Object.assign({created_at: {[Op.between]: [req.query.start, req.query.end]}}, q) : q,
+            where: (req.query.start && req.query.end) ?
+                Object.assign(
+                    { created_at: {
+                            [Op.between]: [`${req.query.start} 00:00:00`, `${req.query.end} 23:59:59`]
+                        }
+                    }, q) : q,
             include: [{
                 model : Membership,
                 paranoid: false,
@@ -199,7 +213,7 @@ export const findAllBalances = (req, res) => {
                     total: transactions.count,
                     pages: pages,
                     items: size,
-                    page: offset+1
+                    page: page
                 }
             }).code(200)
         })
